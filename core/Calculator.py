@@ -1,24 +1,28 @@
 import numpy as np
 
+
 class Calculator:
     @staticmethod
     def get_full_periods_data(signal, T=None):
+        # non-periodic, return all samples
         if T is None or T <= 0:
-            raise ValueError("Period T must be a positive number")
-        duration = signal.num_samples / signal.f
-        if duration <= T:
-            raise ValueError("Duration of the signal must be greater than the period T")
+            return signal.amplitudes
 
+        duration = signal.num_samples / signal.f
         num_full_periods = int(duration // T)
+
+        if num_full_periods == 0:
+            return signal.amplitudes
+
         samples_to_keep = int(num_full_periods * T * signal.f)
-        
+
         return signal.amplitudes[:samples_to_keep]
 
     @staticmethod
     def average(signal, T=None):
         full_periods_data = Calculator.get_full_periods_data(signal, T)
         return np.mean(full_periods_data)
-    
+
     @staticmethod
     def abs_average(signal, T=None):
         full_periods_data = Calculator.get_full_periods_data(signal, T)

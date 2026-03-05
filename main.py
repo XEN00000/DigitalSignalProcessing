@@ -5,6 +5,7 @@ import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+from core.Calculator import Calculator
 from core.Signal import Signal
 from generators.NoiseGenerators import GaussianNoiseGenerator
 from generators.SignalGenerators import FullWaveSineGenerator, HalfWaveSineGenerator, ImpulseNoiseGenerator, RectangularGenerator, SinusoidalGenerator, SymmetricRectangularGenerator, TriangularGenerator, UnitImpulseGenerator, UnitStepGenerator
@@ -255,6 +256,16 @@ class SignalApp(tk.Tk):
             self.current_signal.is_discrete = signal_type in [
                 "Szum Impulsowy", "Impuls jednostkowy"]
 
+            # Przypisanie okresu T do sygnału, by użyć go w obliczeniach
+            T_val = None
+            if signal_type in ["Sygnał Sinusoidalny", "Sygnał Sinusoidalny wyprostowany jednopołówkowo", "Sygnał Sinusoidalny wyprostowany dwupołówkowo"]:
+                sig_f = float(self.entries["signal_freq"].get())
+                if sig_f > 0:
+                    T_val = 1.0 / sig_f
+            elif signal_type in ["Sygnał Prostokątny", "Sygnał Prostokątny symetryczny", "Sygnał Trójkątny"]:
+                T_val = float(self.entries["T"].get())
+
+            self.current_signal.T = T_val
             # 5. Aktualizacja starych zmiennych dla reszty GUI
             self.current_signal_time = t
             self.current_signal_values = y
@@ -271,19 +282,18 @@ class SignalApp(tk.Tk):
                 "Błąd GUI", f"Brak pola wprowadzania dla parametru: {e}")
 
     def calculate_parameters(self):
-        """Oblicza średnią, RMS, wariancję itd."""
-        if len(self.current_signal_values) == 0:
+        """Oblicza średnią, RMS, wariancję itd. korzystając z pełnych okresów."""
+        if not hasattr(self, 'current_signal') or self.current_signal is None:
             return
 
-        # todo: add truncation of incomplete periods
-        y = self.current_signal_values
+        # Pobieramy T, jeśli nie istnieje - zwracamy None (Calculator sobie z tym poradzi)
+        T = getattr(self.current_signal, 'T', None)
 
-        mean_val = np.mean(y)
-        abs_mean = np.mean(np.abs(y))
-        rms = np.sqrt(np.mean(y**2))
-        variance = np.var(y)
-
-        power = np.mean(y**2)
+        mean_val = Calculator.average(self.current_signal, T)
+        abs_mean = Calculator.abs_average(self.current_signal, T)
+        rms = Calculator.rms(self.current_signal, T)
+        variance = Calculator.variance(self.current_signal, T)
+        power = Calculator.average_power(self.current_signal, T)
 
         stats_text = (f"Średnia: {mean_val:.4f}\n"
                       f"Średnia bezwzględna: {abs_mean:.4f}\n"
@@ -336,14 +346,19 @@ class SignalApp(tk.Tk):
         self.update_histogram()
 
     def update_histogram(self, event=None):
-        """Aktualizuje tylko histogram w oparciu o suwak."""
-        if len(self.current_signal_values) == 0:
+        """Aktualizuje tylko histogram w oparciu o suwak (na pełnych okresach)."""
+        if not hasattr(self, 'current_signal') or self.current_signal is None:
             return
 
         bins = self.hist_bins.get()
         self.ax_hist.clear()
-        self.ax_hist.hist(self.current_signal_values, bins=bins,
-                          color='green', edgecolor='black', alpha=0.7)
+
+        # Pobieramy dane obcięte do pełnych okresów dla histogramu
+        T = getattr(self.current_signal, 'T', None)
+        hist_data = Calculator.get_full_periods_data(self.current_signal, T)
+
+        self.ax_hist.hist(hist_data, bins=bins, color='green',
+                          edgecolor='black', alpha=0.7)
         self.ax_hist.set_title(f"Histogram ({bins} przedziałów)")
         self.ax_hist.set_xlabel("Wartość")
         self.ax_hist.set_ylabel("Liczba wystąpień")
