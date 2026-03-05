@@ -2,6 +2,7 @@ import struct
 import numpy as np
 from core.Signal import Signal
 
+
 class FileHandler:
     @staticmethod
     def save_to_binary(filepath, signal):
@@ -16,10 +17,10 @@ class FileHandler:
                 num_samples (int)
             '''
             f.write(struct.pack(
-                'dd?i', 
-                signal.t1, 
-                signal.f, 
-                signal.is_complex, 
+                'dd?i',
+                signal.t1,
+                signal.f,
+                signal.is_complex,
                 signal.num_samples)
             )
 
@@ -32,7 +33,26 @@ class FileHandler:
     @staticmethod
     def load_from_binary(filepath):
         with open(filepath, 'rb') as f:
-            pass
+            # 'dd?i'
+            header_bytes = f.read(21)
+            if len(header_bytes) < 21:
+                raise ValueError("Plik jest zbyt krótki lub uszkodzony.")
+
+            t1, f_freq, is_complex, num_samples = struct.unpack(
+                'dd?i', header_bytes)
+
+            dtype = np.complex128 if is_complex else np.float64
+
+            amplitudes = np.fromfile(f, dtype=dtype)
+
+            signal = Signal(
+                start_time=t1,
+                sampling_freq=f_freq,
+                amplitudes=amplitudes,
+                is_complex=is_complex
+            )
+
+            return signal
 
     @staticmethod
     def save_to_text(filepath, signal):
