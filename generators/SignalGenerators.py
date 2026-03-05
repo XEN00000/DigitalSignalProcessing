@@ -1,6 +1,6 @@
 import numpy as np
 
-from generators import BaseGenerator
+from .BaseGenerator import BaseGenerator
 
 
 class SinusoidalGenerator(BaseGenerator):
