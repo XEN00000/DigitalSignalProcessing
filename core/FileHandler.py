@@ -4,6 +4,10 @@ from core.Signal import Signal
 
 
 class FileHandler:
+    # < = little-endian,   d = double (8B), ? = bool (1B), i = int (4B)
+    HEADER_FORMAT = '<dd?i'
+    HEADER_SIZE = struct.calcsize(HEADER_FORMAT)
+
     @staticmethod
     def save_to_binary(filepath, signal):
         with open(filepath, 'wb') as f:
