@@ -43,7 +43,6 @@ class HalfWaveSineGenerator(BaseGenerator):
         """
         t = self.get_time_axis()
 
-        # zapytac czy mozna takim sposobem to zrobic, czy wzorem
         sine_wave = self.A * \
             np.sin(2 * np.pi * self.signal_freq * t + self.phase)
 
