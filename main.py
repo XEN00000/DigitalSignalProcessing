@@ -1,10 +1,10 @@
-from logging import FileHandler
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+from core.FileHandler import FileHandler
 from core.Calculator import Calculator
 from core.Signal import Signal
 from generators.NoiseGenerators import GaussianNoiseGenerator
@@ -103,6 +103,22 @@ class SignalApp(tk.Tk):
                    command=self.load_from_bin).pack(fill=tk.X, pady=2)
         ttk.Button(lf_files, text="Pokaż dane tekstowo",
                    command=self.show_text_data).pack(fill=tk.X, pady=2)
+
+        # Operations on signal
+        lf_operations = ttk.LabelFrame(
+            self.left_panel, text="Operacje na sygnałach", padding=10)
+        lf_operations.pack(fill=tk.X, pady=5)
+
+        self.cb_operation = ttk.Combobox(
+            lf_operations,
+            values=["Dodawanie", "Odejmowanie", "Mnożenie", "Dzielenie"],
+            state="readonly"
+        )
+        self.cb_operation.pack(fill=tk.X, pady=5)
+        self.cb_operation.set("Dodawanie")
+
+        ttk.Button(lf_operations, text="Wczytaj 2 pliki i wykonaj",
+                   command=self.perform_operation).pack(fill=tk.X, pady=2)
 
     def update_param_fields(self, event=None):
         """Dynamicznie buduje pola wprowadzania danych w zależności od wybranego sygnału."""
@@ -415,6 +431,63 @@ class SignalApp(tk.Tk):
         if len(self.current_signal_values) > 100:
             text.insert(
                 tk.END, "\n... (wyświetlono tylko pierwsze 100 próbek)")
+
+    def perform_operation(self):
+        """Wczytuje dwa sygnały z plików binarnych, wykonuje operację i aktualizuje GUI."""
+
+        # load first file
+        filepath1 = filedialog.askopenfilename(
+            title="Wybierz pierwszy sygnał (S1)",
+            filetypes=[("Pliki binarne", "*.bin")]
+        )
+        if not filepath1:
+            return
+
+        # load second file
+        filepath2 = filedialog.askopenfilename(
+            title="Wybierz drugi sygnał (S2)",
+            filetypes=[("Pliki binarne", "*.bin")]
+        )
+        if not filepath2:
+            return
+
+        try:
+            s1 = FileHandler.load_from_binary(filepath1)
+            s2 = FileHandler.load_from_binary(filepath2)
+
+            operation = self.cb_operation.get()
+
+            if operation == "Dodawanie":
+                result_signal = s1 + s2
+            elif operation == "Odejmowanie":
+                result_signal = s1 - s2
+            elif operation == "Mnożenie":
+                result_signal = s1 * s2
+            elif operation == "Dzielenie":
+                result_signal = s1 / s2
+            else:
+                return
+
+            # set result to current signal
+            self.current_signal = result_signal
+            self.current_signal_time = self.current_signal.time_axis
+            self.current_signal_values = self.current_signal.amplitudes
+
+            self.calculate_parameters()
+            self.update_plots()
+
+            messagebox.showinfo(
+                "Sukces",
+                "Operacja wykonana pomyślnie. Wskaż miejsce zapisu sygnału wynikowego."
+            )
+            self.save_to_bin()
+
+        except ValueError as e:
+            messagebox.showerror(
+                "Błąd kompatybilności sygnałów", f"Nie można wykonać operacji:\n{e}")
+        except Exception as e:
+            messagebox.showerror("Błąd niespodziewany",
+                                 f"Wystąpił problem:\n{e}")
 
 
 if __name__ == "__main__":

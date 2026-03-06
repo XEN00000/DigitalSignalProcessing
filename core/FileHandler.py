@@ -21,7 +21,7 @@ class FileHandler:
                 num_samples (int)
             '''
             f.write(struct.pack(
-                'dd?i',
+                FileHandler.HEADER_FORMAT,
                 signal.t1,
                 signal.f,
                 signal.is_complex,
@@ -37,17 +37,18 @@ class FileHandler:
     @staticmethod
     def load_from_binary(filepath):
         with open(filepath, 'rb') as f:
-            # 'dd?i'
-            header_bytes = f.read(21)
-            if len(header_bytes) < 21:
+            header_bytes = f.read(FileHandler.HEADER_SIZE)
+
+            if len(header_bytes) < FileHandler.HEADER_SIZE:
                 raise ValueError("Plik jest zbyt krótki lub uszkodzony.")
 
             t1, f_freq, is_complex, num_samples = struct.unpack(
-                'dd?i', header_bytes)
+                FileHandler.HEADER_FORMAT, header_bytes)
 
             dtype = np.complex128 if is_complex else np.float64
 
-            amplitudes = np.fromfile(f, dtype=dtype)
+            # read as many samples as declared in the header
+            amplitudes = np.fromfile(f, dtype=dtype, count=num_samples)
 
             signal = Signal(
                 start_time=t1,
