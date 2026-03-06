@@ -43,7 +43,6 @@ class HalfWaveSineGenerator(BaseGenerator):
         """
         t = self.get_time_axis()
 
-        # zapytac czy mozna takim sposobem to zrobic, czy wzorem
         sine_wave = self.A * \
             np.sin(2 * np.pi * self.signal_freq * t + self.phase)
 
@@ -67,11 +66,9 @@ class FullWaveSineGenerator(BaseGenerator):
         """
         t = self.get_time_axis()
 
-        # Generujemy bazową sinusoidę (bez mnożenia od razu przez amplitudę,
-        # choć nie ma to znaczenia matematycznego, jeśli A jest dodatnie)
         base_sine = np.sin(2 * np.pi * self.signal_freq * t + self.phase)
 
-        # Wykonujemy prostowanie dwupołówkowe (wartość bezwzględna) i skalujemy
+        # abs - reflection over x axis
         rectified_signal = self.A * np.abs(base_sine)
 
         return rectified_signal
@@ -206,14 +203,12 @@ class DiscreteBaseGenerator(BaseGenerator):
         """
         super().__init__(amplitude, start_time, duration, sampling_freq)
 
-        # Obliczamy całkowitą liczbę próbek (podobnie jak w klasie bazowej)
         num_samples = int(self.d * self.f)
 
-        # Obliczamy początkowy indeks próbki n1 na podstawie czasu startowego t1
-        # Zakładamy, że t=0 odpowiada n=0
+        # t = n/f  =>  n=t*f
         self.n1 = int(round(self.t1 * self.f))
 
-        # Tworzymy oś próbek (zbiór liczb całkowitych: n1, n1+1, n1+2, ...)
+        # sample axis: n1, n1+1, ..., n1 + num_samples
         self.sample_axis = np.arange(self.n1, self.n1 + num_samples)
 
     def get_sample_axis(self):
