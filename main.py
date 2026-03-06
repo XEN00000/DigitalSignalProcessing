@@ -172,8 +172,8 @@ class SignalApp(tk.Tk):
     def generate_and_plot(self):
         """Metoda wywoływana po kliknięciu 'Generuj'. Łączy GUI z logiką generatorów."""
         try:
-            # 1. Pobranie parametrów bazowych, wspólnych dla każdego sygnału
-            # self.entries to słownik, w którym kluczami są nazwy parametrów zdefiniowane w update_param_fields
+
+            # getting params from entries - names are defined in update_param_fields
             A = float(self.entries["amplitude"].get())
             t1 = float(self.entries["start_time"].get())
             d = float(self.entries["duration"].get())
@@ -182,7 +182,6 @@ class SignalApp(tk.Tk):
             signal_type = self.cb_signal_type.get()
             generator = None
 
-            # 2. Rozpoznanie wybranego sygnału, pobranie specyficznych parametrów i utworzenie generatora
             if signal_type == "Szum Gaussowski":
                 generator = GaussianNoiseGenerator(A, t1, d, f)
 
@@ -225,33 +224,32 @@ class SignalApp(tk.Tk):
                 generator = UnitStepGenerator(A, t1, d, f, ts)
 
             elif signal_type == "Impuls jednostkowy":
-                ns = int(self.entries["ns"].get())  # ns to liczba całkowita!
+                ns = int(self.entries["ns"].get())
                 generator = UnitImpulseGenerator(A, t1, d, f, ns)
 
             else:
                 messagebox.showerror("Błąd", "Wybrano nieznany typ sygnału.")
                 return
 
-            # 3. Wygenerowanie sygnału z instancji odpowiedniej klasy
+            # generating signal
             y = generator.generate()
 
-            # Pobranie odpowiedniej osi (czasowej lub próbek, zależnie od typu generatora)
+            # axis depends on signal type/generator type
             if hasattr(generator, 'get_sample_axis'):
                 t = generator.get_sample_axis()
             else:
                 t = generator.get_time_axis()
 
-            # 4. Opakowanie danych w obiekt Signal
-            # Dzięki temu FileHandler będzie mógł zapisać ten sygnał, jeśli użytkownik kliknie "Zapisz do pliku"
+            # self.current_signal is needed to save the file
             self.current_signal = Signal(
                 start_time=t1, sampling_freq=f, amplitudes=y, is_complex=False)
             self.current_signal.time_axis = t
 
-            # Flaga pomocnicza do rysowania odpowiednich wykresów (ciągły vs prążkowy) w update_plots
+            # flag needed to draw the plot
             self.current_signal.is_discrete = signal_type in [
                 "Szum Impulsowy", "Impuls jednostkowy"]
 
-            # Przypisanie okresu T do sygnału, by użyć go w obliczeniach
+            # T = 1/f - period
             T_val = None
             if signal_type in ["Sygnał Sinusoidalny", "Sygnał Sinusoidalny wyprostowany jednopołówkowo", "Sygnał Sinusoidalny wyprostowany dwupołówkowo"]:
                 sig_f = float(self.entries["signal_freq"].get())
@@ -261,11 +259,11 @@ class SignalApp(tk.Tk):
                 T_val = float(self.entries["T"].get())
 
             self.current_signal.T = T_val
-            # 5. Aktualizacja starych zmiennych dla reszty GUI
+
+            # GUI update
             self.current_signal_time = t
             self.current_signal_values = y
 
-            # 6. Przeliczenie statystyk i odrysowanie wykresów
             self.calculate_parameters()
             self.update_plots()
 
@@ -281,7 +279,6 @@ class SignalApp(tk.Tk):
         if not hasattr(self, 'current_signal') or self.current_signal is None:
             return
 
-        # Pobieramy T, jeśli nie istnieje - zwracamy None (Calculator sobie z tym poradzi)
         T = getattr(self.current_signal, 'T', None)
 
         mean_val = Calculator.average(self.current_signal, T)
@@ -299,22 +296,17 @@ class SignalApp(tk.Tk):
 
     def update_plots(self):
         """Odświeża wykres sygnału i wywołuje odświeżenie histogramu."""
-        # Zabezpieczenie: nie rysujemy, jeśli tablica wartości jest pusta
         if len(self.current_signal_values) == 0:
             return
 
-        # Czyszczenie górnego obszaru roboczego (osi sygnału)
         self.ax_signal.clear()
 
-        # Sprawdzamy, czy sygnał ma ustawioną flagę dyskretności
-        # getattr bezpiecznie sprawdza atrybut, domyślnie zwracając False, jeśli go nie ma
         is_discrete = False
         if hasattr(self, 'current_signal') and hasattr(self.current_signal, 'is_discrete'):
             is_discrete = self.current_signal.is_discrete
 
-        # Rysowanie właściwego typu wykresu
         if is_discrete:
-            # Dla sygnałów dyskretnych (np. impuls jednostkowy) używamy wykresu prążkowego (stem)
+            # todo: change stem to dots
             self.ax_signal.stem(
                 self.current_signal_time,
                 self.current_signal_values,
@@ -323,21 +315,18 @@ class SignalApp(tk.Tk):
                 markerfmt="bo"
             )
         else:
-            # Dla sygnałów ciągłych (np. sinusoida, trójkąt) używamy klasycznej linii
+            # for continuous signals use line
             self.ax_signal.plot(
                 self.current_signal_time,
                 self.current_signal_values,
                 color='blue'
             )
 
-        # Konfiguracja wyglądu górnego wykresu
         self.ax_signal.set_title("Wykres amplitudy od czasu")
         self.ax_signal.set_xlabel("Czas [s]")
         self.ax_signal.set_ylabel("Amplituda")
         self.ax_signal.grid(True)
 
-        # Na koniec wywołujemy odświeżenie histogramu,
-        # które przy okazji przerysuje całe płótno (self.canvas.draw())
         self.update_histogram()
 
     def update_histogram(self, event=None):
@@ -348,7 +337,6 @@ class SignalApp(tk.Tk):
         bins = self.hist_bins.get()
         self.ax_hist.clear()
 
-        # Pobieramy dane obcięte do pełnych okresów dla histogramu
         T = getattr(self.current_signal, 'T', None)
         hist_data = Calculator.get_full_periods_data(self.current_signal, T)
 
