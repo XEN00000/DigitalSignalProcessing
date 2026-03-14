@@ -326,7 +326,7 @@ class SignalApp(QMainWindow):
         signal_type = self.cb_signal_type.currentText()
 
         if is_discrete:
-            if signal_type == "Impuls jednostkowy":
+            if signal_type == "Impuls jednostkowy" or signal_type == "Szum Impulsowy":
                 self.ax_signal.plot(
                     self.current_signal_time,
                     self.current_signal_values,
