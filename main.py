@@ -323,14 +323,23 @@ class SignalApp(QMainWindow):
         self.ax_signal.clear()
         is_discrete = getattr(self.current_signal, 'is_discrete', False)
 
+        signal_type = self.cb_signal_type.currentText()
+
         if is_discrete:
-            self.ax_signal.stem(
-                self.current_signal_time,
-                self.current_signal_values,
-                basefmt="black",
-                linefmt="blue",
-                markerfmt="bo"
-            )
+            if signal_type == "Impuls jednostkowy":
+                self.ax_signal.plot(
+                    self.current_signal_time,
+                    self.current_signal_values,
+                    'bo'
+                )
+            else:
+                self.ax_signal.stem(
+                    self.current_signal_time,
+                    self.current_signal_values,
+                    basefmt="black",
+                    linefmt="blue",
+                    markerfmt="bo"
+                )
         else:
             self.ax_signal.plot(
                 self.current_signal_time,
