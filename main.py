@@ -364,12 +364,20 @@ class SignalApp(QMainWindow):
         T = getattr(self.current_signal, 'T', None)
         hist_data = Calculator.get_full_periods_data(self.current_signal, T)
 
-        self.ax_hist.hist(hist_data, bins=bins, color='green', edgecolor='black', alpha=0.7)
+        counts, bin_edges, patches = self.ax_hist.hist(
+            hist_data, bins=bins, color='green', edgecolor='black'
+        ) 
+
+        # self.ax_hist.hist(hist_data, bins=bins, color='green', edgecolor='black', alpha=0.7)
         self.ax_hist.set_title(f"Histogram ({bins} przedziałów)")
         self.ax_hist.set_xlabel("Wartość")
         self.ax_hist.set_ylabel("Liczba wystąpień")
         self.ax_hist.grid(axis='y')
 
+        self.ax_hist.set_xticks(bin_edges)
+        self.ax_hist.set_xticklabels([f'{val:.2f}' for val in bin_edges])
+
+        self.figure.tight_layout(pad=3.0)
         self.canvas.draw()
 
     def save_to_bin(self):
