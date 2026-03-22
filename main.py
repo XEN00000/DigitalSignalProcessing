@@ -479,29 +479,36 @@ class SignalApp(QMainWindow):
         text_edit.setPlainText(content)
         dialog.exec()
 
-    def _get_signal_for_operation(self, index, title):
+    def _get_signal_for_operation(self, index, cb_widget, title):
         if index == 0:  # index 0, oznacza "wczytaj z pliku"
             filepath, _ = QFileDialog.getOpenFileName(
                 self, title, "", "Pliki binarne (*.bin)")
             if filepath:
-                return FileHandler.load_from_binary(filepath)
-            return None
+                signal = FileHandler.load_from_binary(filepath)
+                # nazwa sygnalu jako nazwa pliku
+                name = filepath.split('/')[-1]
+                return signal, name
+            return None, None
         else:
             # element na liście o indexie > 0 to index-1 w self.signal_history
-            return self.signal_history[index - 1]
+            print(title)
+            signal = self.signal_history[index - 1]
+            name = cb_widget.currentText()
+            print('udało sięwczytać sygnał:', title)
+            return signal, name
 
     def perform_operation(self):
         try:
             # co użytkownik wybrał z listy
             idx1 = self.cb_sig1.currentIndex()
-            s1 = self._get_signal_for_operation(
-                idx1, "Wybierz pierwszy sygnał (S1)")
+            s1, name1 = self._get_signal_for_operation(
+                idx1, self.cb_sig1, "Wybierz pierwszy sygnał (S1)")
             if s1 is None:
                 return
 
             idx2 = self.cb_sig2.currentIndex()
-            s2 = self._get_signal_for_operation(
-                idx2, "Wybierz drugi sygnał (S2)")
+            s2, name2 = self._get_signal_for_operation(
+                idx2, self.cb_sig2, "Wybierz drugi sygnał (S2)")
             if s2 is None:
                 return
 
@@ -527,7 +534,8 @@ class SignalApp(QMainWindow):
 
             op_symbol = {"Dodawanie": "+", "Odejmowanie": "-",
                          "Mnożenie": "*", "Dzielenie": "/"}[operation]
-            res_name = f"[{len(self.signal_history)+1}] Wynik: S{idx1} {op_symbol} S{idx2}"
+            # res_name = f"[{len(self.signal_history)+1}] Wynik: ({name1}) {op_symbol} ({name2})"
+            res_name = f"({name1}) {op_symbol} ({name2})"
             self.add_to_history(result_signal, res_name)
 
             QMessageBox.information(
