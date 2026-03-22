@@ -1,8 +1,8 @@
 import sys
 import numpy as np
-from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
-                               QHBoxLayout, QGroupBox, QLabel, QComboBox, 
-                               QLineEdit, QPushButton, QSlider, QMessageBox, 
+from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
+                               QHBoxLayout, QGroupBox, QLabel, QComboBox,
+                               QLineEdit, QPushButton, QSlider, QMessageBox,
                                QFileDialog, QFormLayout, QTextEdit, QDialog)
 from PySide6.QtCore import Qt
 
@@ -13,10 +13,10 @@ from core.FileHandler import FileHandler
 from core.Calculator import Calculator
 from core.Signal import Signal
 from generators.NoiseGenerators import GaussianNoiseGenerator
-from generators.SignalGenerators import (FullWaveSineGenerator, HalfWaveSineGenerator, 
-                                         ImpulseNoiseGenerator, RectangularGenerator, 
-                                         SinusoidalGenerator, SymmetricRectangularGenerator, 
-                                         TriangularGenerator, UnitImpulseGenerator, 
+from generators.SignalGenerators import (FullWaveSineGenerator, HalfWaveSineGenerator,
+                                         ImpulseNoiseGenerator, RectangularGenerator,
+                                         SinusoidalGenerator, SymmetricRectangularGenerator,
+                                         TriangularGenerator, UnitImpulseGenerator,
                                          UnitStepGenerator)
 
 
@@ -28,7 +28,9 @@ class SignalApp(QMainWindow):
 
         self.current_signal_time = np.array([])
         self.current_signal_values = np.array([])
-        
+
+        self.signal_history = []  # historia sygnałów
+
         # Centralny widget
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -42,7 +44,7 @@ class SignalApp(QMainWindow):
         self.left_panel.setFixedWidth(450)
         self.left_layout = QVBoxLayout(self.left_panel)
         self.left_layout.setAlignment(Qt.AlignTop)
-        
+
         # Panel prawy (wykresy)
         self.right_panel = QWidget()
         self.right_layout = QVBoxLayout(self.right_panel)
@@ -79,7 +81,8 @@ class SignalApp(QMainWindow):
         layout_signal.addWidget(self.cb_signal_type)
 
         # Powiązanie zmiany typu sygnału z odświeżaniem formularza
-        self.cb_signal_type.currentIndexChanged.connect(self.update_param_fields)
+        self.cb_signal_type.currentIndexChanged.connect(
+            self.update_param_fields)
 
         # Miejsce na dynamiczne parametry
         self.params_widget = QWidget()
@@ -95,10 +98,11 @@ class SignalApp(QMainWindow):
 
         self.left_layout.addWidget(gb_signal)
 
-        # Parametry Sygnału 
+        # Parametry Sygnału
         gb_stats = QGroupBox("Parametry Sygnału")
         layout_stats = QVBoxLayout(gb_stats)
-        self.lbl_stats = QLabel("Średnia: -\nŚrednia bezwzględna: -\nRMS: -\nWariancja: -\nMoc: -")
+        self.lbl_stats = QLabel(
+            "Średnia: -\nŚrednia bezwzględna: -\nRMS: -\nWariancja: -\nMoc: -")
         layout_stats.addWidget(self.lbl_stats)
         self.left_layout.addWidget(gb_stats)
 
@@ -106,47 +110,58 @@ class SignalApp(QMainWindow):
         gb_hist = QGroupBox("Ustawienia Histogramu")
         layout_hist = QVBoxLayout(gb_hist)
         layout_hist.addWidget(QLabel("Liczba przedziałów:"))
-        
+
         self.scale_hist = QSlider(Qt.Horizontal)
         self.scale_hist.setRange(5, 20)
         self.scale_hist.setValue(10)
         self.scale_hist.setTickPosition(QSlider.TicksBelow)
         self.scale_hist.setTickInterval(1)
         self.scale_hist.valueChanged.connect(self.update_histogram)
-        
+
         layout_hist.addWidget(self.scale_hist)
         self.left_layout.addWidget(gb_hist)
 
         # --- Operacje Plikowe ---
         gb_files = QGroupBox("Operacje Plikowe")
         layout_files = QVBoxLayout(gb_files)
-        
+
         btn_save_bin = QPushButton("Zapisz do pliku (BIN)")
         btn_save_bin.clicked.connect(self.save_to_bin)
         layout_files.addWidget(btn_save_bin)
-        
+
         btn_load_bin = QPushButton("Wczytaj z pliku (BIN)")
         btn_load_bin.clicked.connect(self.load_from_bin)
         layout_files.addWidget(btn_load_bin)
-        
+
         btn_show_text = QPushButton("Pokaż dane tekstowo")
         btn_show_text.clicked.connect(self.show_text_data)
         layout_files.addWidget(btn_show_text)
-        
+
         self.left_layout.addWidget(gb_files)
 
         # --- Operacje na sygnałach ---
         gb_operations = QGroupBox("Operacje na sygnałach")
         layout_operations = QVBoxLayout(gb_operations)
-        
+
         self.cb_operation = QComboBox()
-        self.cb_operation.addItems(["Dodawanie", "Odejmowanie", "Mnożenie", "Dzielenie"])
+        self.cb_operation.addItems(
+            ["Dodawanie", "Odejmowanie", "Mnożenie", "Dzielenie"])
         layout_operations.addWidget(self.cb_operation)
-        
-        btn_perform_op = QPushButton("Wczytaj 2 pliki i wykonaj")
+
+        self.cb_sig1 = QComboBox()
+        self.cb_sig1.addItem("Wczytaj z pliku (BIN)...")
+        layout_operations.addWidget(QLabel("Sygnał 1:"))
+        layout_operations.addWidget(self.cb_sig1)
+
+        self.cb_sig2 = QComboBox()
+        self.cb_sig2.addItem("Wczytaj z pliku (BIN)...")
+        layout_operations.addWidget(QLabel("Sygnał 2:"))
+        layout_operations.addWidget(self.cb_sig2)
+
+        btn_perform_op = QPushButton("Wykonaj operację")
         btn_perform_op.clicked.connect(self.perform_operation)
         layout_operations.addWidget(btn_perform_op)
-        
+
         self.left_layout.addWidget(gb_operations)
 
     def update_param_fields(self):
@@ -171,7 +186,8 @@ class SignalApp(QMainWindow):
 
         sinusoidalne = ["Sygnał Sinusoidalny", "Sygnał Sinusoidalny wyprostowany jednopołówkowo",
                         "Sygnał Sinusoidalny wyprostowany dwupołówkowo"]
-        okresowe = ["Sygnał Prostokątny", "Sygnał Prostokątny symetryczny", "Sygnał Trójkątny"]
+        okresowe = ["Sygnał Prostokątny",
+                    "Sygnał Prostokątny symetryczny", "Sygnał Trójkątny"]
 
         if signal_type in sinusoidalne:
             params_to_create.extend([
@@ -263,7 +279,8 @@ class SignalApp(QMainWindow):
                 generator = UnitImpulseGenerator(A, t1, d, f, ns)
 
             else:
-                QMessageBox.critical(self, "Błąd", "Wybrano nieznany typ sygnału.")
+                QMessageBox.critical(
+                    self, "Błąd", "Wybrano nieznany typ sygnału.")
                 return
 
             # Generowanie sygnału
@@ -274,9 +291,11 @@ class SignalApp(QMainWindow):
             else:
                 t = generator.get_time_axis()
 
-            self.current_signal = Signal(start_time=t1, sampling_freq=f, amplitudes=y, is_complex=False)
+            self.current_signal = Signal(
+                start_time=t1, sampling_freq=f, amplitudes=y, is_complex=False)
             self.current_signal.time_axis = t
-            self.current_signal.is_discrete = signal_type in ["Szum Impulsowy", "Impuls jednostkowy"]
+            self.current_signal.is_discrete = signal_type in [
+                "Szum Impulsowy", "Impuls jednostkowy"]
 
             T_val = None
             if signal_type in ["Sygnał Sinusoidalny", "Sygnał Sinusoidalny wyprostowany jednopołówkowo", "Sygnał Sinusoidalny wyprostowany dwupołówkowo"]:
@@ -293,10 +312,16 @@ class SignalApp(QMainWindow):
             self.calculate_parameters()
             self.update_plots()
 
+            # dodanie do historii
+            hist_name = f"[{len(self.signal_history)+1}] Gen: {signal_type}"
+            self.add_to_history(self.current_signal, hist_name)
+
         except ValueError:
-            QMessageBox.critical(self, "Błąd danych", "Upewnij się, że wszystkie wpisane parametry są poprawnymi liczbami (używaj kropek, nie przecinków).")
+            QMessageBox.critical(
+                self, "Błąd danych", "Upewnij się, że wszystkie wpisane parametry są poprawnymi liczbami (używaj kropek, nie przecinków).")
         except KeyError as e:
-            QMessageBox.critical(self, "Błąd GUI", f"Brak pola wprowadzania dla parametru: {e}")
+            QMessageBox.critical(
+                self, "Błąd GUI", f"Brak pola wprowadzania dla parametru: {e}")
 
     def calculate_parameters(self):
         if not hasattr(self, 'current_signal') or self.current_signal is None:
@@ -366,7 +391,7 @@ class SignalApp(QMainWindow):
 
         counts, bin_edges, patches = self.ax_hist.hist(
             hist_data, bins=bins, color='green', edgecolor='black'
-        ) 
+        )
 
         # self.ax_hist.hist(hist_data, bins=bins, color='green', edgecolor='black', alpha=0.7)
         self.ax_hist.set_title(f"Histogram ({bins} przedziałów)")
@@ -380,21 +405,37 @@ class SignalApp(QMainWindow):
         self.figure.tight_layout(pad=3.0)
         self.canvas.draw()
 
+    def add_to_history(self, signal, name):
+        # zapisujemy nazwe sygnału
+        signal.name = name
+        self.signal_history.append(signal)
+
+        # dodanie do comboboxów
+        self.cb_sig1.addItem(name)
+        self.cb_sig2.addItem(name)
+
+        self.cb_sig1.setCurrentIndex(self.cb_sig1.count() - 1)
+
     def save_to_bin(self):
         if not hasattr(self, 'current_signal') or self.current_signal is None:
-            QMessageBox.warning(self, "Brak danych", "Brak wygenerowanego sygnału do zapisu.")
+            QMessageBox.warning(self, "Brak danych",
+                                "Brak wygenerowanego sygnału do zapisu.")
             return
 
-        filepath, _ = QFileDialog.getSaveFileName(self, "Zapisz do pliku", "", "Pliki binarne (*.bin)")
+        filepath, _ = QFileDialog.getSaveFileName(
+            self, "Zapisz do pliku", "", "Pliki binarne (*.bin)")
         if filepath:
             try:
                 FileHandler.save_to_binary(filepath, self.current_signal)
-                QMessageBox.information(self, "Sukces", "Sygnał zapisany poprawnie.")
+                QMessageBox.information(
+                    self, "Sukces", "Sygnał zapisany poprawnie.")
             except Exception as e:
-                QMessageBox.critical(self, "Błąd", f"Nie udało się zapisać pliku:\n{e}")
+                QMessageBox.critical(
+                    self, "Błąd", f"Nie udało się zapisać pliku:\n{e}")
 
     def load_from_bin(self):
-        filepath, _ = QFileDialog.getOpenFileName(self, "Wczytaj z pliku", "", "Pliki binarne (*.bin)")
+        filepath, _ = QFileDialog.getOpenFileName(
+            self, "Wczytaj z pliku", "", "Pliki binarne (*.bin)")
         if filepath:
             try:
                 self.current_signal = FileHandler.load_from_binary(filepath)
@@ -403,8 +444,15 @@ class SignalApp(QMainWindow):
 
                 self.calculate_parameters()
                 self.update_plots()
+
+                # bierzemy nazwę pliku ze scieżki
+                filename = filepath.split('/')[-1]
+                self.add_to_history(
+                    self.current_signal, f"[{len(self.signal_history)+1}] Z pliku: {filename}")
+
             except Exception as e:
-                QMessageBox.critical(self, "Błąd", f"Nie udało się wczytać pliku:\n{e}")
+                QMessageBox.critical(
+                    self, "Błąd", f"Nie udało się wczytać pliku:\n{e}")
 
     def show_text_data(self):
         if len(self.current_signal_values) == 0:
@@ -413,7 +461,7 @@ class SignalApp(QMainWindow):
         dialog = QDialog(self)
         dialog.setWindowTitle("Dane tekstowe")
         dialog.resize(400, 500)
-        
+
         layout = QVBoxLayout(dialog)
         text_edit = QTextEdit()
         text_edit.setReadOnly(True)
@@ -423,24 +471,39 @@ class SignalApp(QMainWindow):
         display_limit = min(100, len(self.current_signal_values))
         lines = [f"t={t:.4f}s \t val={v:.4f}" for t, v in zip(
             self.current_signal_time[:display_limit], self.current_signal_values[:display_limit])]
-        
+
         content = "\n".join(lines)
         if len(self.current_signal_values) > 100:
             content += "\n... (wyświetlono tylko pierwsze 100 próbek)"
-            
+
         text_edit.setPlainText(content)
         dialog.exec()
 
+    def _get_signal_for_operation(self, index, title):
+        if index == 0:  # index 0, oznacza "wczytaj z pliku"
+            filepath, _ = QFileDialog.getOpenFileName(
+                self, title, "", "Pliki binarne (*.bin)")
+            if filepath:
+                return FileHandler.load_from_binary(filepath)
+            return None
+        else:
+            # element na liście o indexie > 0 to index-1 w self.signal_history
+            return self.signal_history[index - 1]
+
     def perform_operation(self):
-        filepath1, _ = QFileDialog.getOpenFileName(self, "Wybierz pierwszy sygnał (S1)", "", "Pliki binarne (*.bin)")
-        if not filepath1: return
-
-        filepath2, _ = QFileDialog.getOpenFileName(self, "Wybierz drugi sygnał (S2)", "", "Pliki binarne (*.bin)")
-        if not filepath2: return
-
         try:
-            s1 = FileHandler.load_from_binary(filepath1)
-            s2 = FileHandler.load_from_binary(filepath2)
+            # co użytkownik wybrał z listy
+            idx1 = self.cb_sig1.currentIndex()
+            s1 = self._get_signal_for_operation(
+                idx1, "Wybierz pierwszy sygnał (S1)")
+            if s1 is None:
+                return
+
+            idx2 = self.cb_sig2.currentIndex()
+            s2 = self._get_signal_for_operation(
+                idx2, "Wybierz drugi sygnał (S2)")
+            if s2 is None:
+                return
 
             operation = self.cb_operation.currentText()
 
@@ -462,13 +525,21 @@ class SignalApp(QMainWindow):
             self.calculate_parameters()
             self.update_plots()
 
-            QMessageBox.information(self, "Sukces", "Operacja wykonana pomyślnie. Wskaż miejsce zapisu sygnału wynikowego.")
+            op_symbol = {"Dodawanie": "+", "Odejmowanie": "-",
+                         "Mnożenie": "*", "Dzielenie": "/"}[operation]
+            res_name = f"[{len(self.signal_history)+1}] Wynik: S{idx1} {op_symbol} S{idx2}"
+            self.add_to_history(result_signal, res_name)
+
+            QMessageBox.information(
+                self, "Sukces", "Operacja wykonana pomyślnie. Sygnał dodany do historii. Wskaż miejsce zapisu sygnału wynikowego.")
             self.save_to_bin()
 
         except ValueError as e:
-            QMessageBox.critical(self, "Błąd kompatybilności sygnałów", f"Nie można wykonać operacji:\n{e}")
+            QMessageBox.critical(
+                self, "Błąd kompatybilności sygnałów", f"Nie można wykonać operacji:\n{e}")
         except Exception as e:
-            QMessageBox.critical(self, "Błąd niespodziewany", f"Wystąpił problem:\n{e}")
+            QMessageBox.critical(self, "Błąd niespodziewany",
+                                 f"Wystąpił problem:\n{e}")
 
 
 if __name__ == "__main__":
