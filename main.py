@@ -12,7 +12,7 @@ from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from core.FileHandler import FileHandler
 from core.Calculator import Calculator
 from core.Signal import Signal
-from generators.NoiseGenerators import GaussianNoiseGenerator
+from generators.NoiseGenerators import GaussianNoiseGenerator, UniformNoiseGenerator
 from generators.SignalGenerators import (FullWaveSineGenerator, HalfWaveSineGenerator,
                                          ImpulseNoiseGenerator, RectangularGenerator,
                                          SinusoidalGenerator, SymmetricRectangularGenerator,
@@ -64,6 +64,7 @@ class SignalApp(QMainWindow):
 
         lista_sygnalow = [
             "Szum Gaussowski",
+            "Szum jednostajny",
             "Szum Impulsowy",
             "Sygnał Sinusoidalny",
             "Sygnał Sinusoidalny wyprostowany jednopołówkowo",
@@ -235,6 +236,9 @@ class SignalApp(QMainWindow):
 
             if signal_type == "Szum Gaussowski":
                 generator = GaussianNoiseGenerator(A, t1, d, f)
+
+            elif signal_type == "Szum jednostajny":
+                generator = UniformNoiseGenerator(A, t1, d, f)
 
             elif signal_type == "Szum Impulsowy":
                 p = float(self.entries["p"].text())
