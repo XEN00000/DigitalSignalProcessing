@@ -9,6 +9,7 @@ from PySide6.QtCore import Qt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
+from core.Converters import Converters
 from core.FileHandler import FileHandler
 from core.Calculator import Calculator
 from core.Signal import Signal
@@ -24,7 +25,7 @@ class SignalApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Generator i Analizator Sygnałów")
-        self.resize(1200, 800)
+        self.resize(1500, 850)
 
         self.current_signal_time = np.array([])
         self.current_signal_values = np.array([])
@@ -39,17 +40,23 @@ class SignalApp(QMainWindow):
         self.create_widgets()
 
     def create_widgets(self):
-        # Panel lewy (sterowanie)
         self.left_panel = QWidget()
-        self.left_panel.setFixedWidth(450)
+        self.left_panel.setFixedWidth(350)
         self.left_layout = QVBoxLayout(self.left_panel)
         self.left_layout.setAlignment(Qt.AlignTop)
 
-        # Panel prawy (wykresy)
+        # operacje konwersji
+        self.middle_panel = QWidget()
+        self.middle_panel.setFixedWidth(350)
+        self.middle_layout = QVBoxLayout(self.middle_panel)
+        self.middle_layout.setAlignment(Qt.AlignTop)
+
+        # wykresy
         self.right_panel = QWidget()
         self.right_layout = QVBoxLayout(self.right_panel)
 
         self.main_layout.addWidget(self.left_panel)
+        self.main_layout.addWidget(self.middle_panel)
         self.main_layout.addWidget(self.right_panel, stretch=1)
 
         self._build_controls()
@@ -107,7 +114,7 @@ class SignalApp(QMainWindow):
         layout_stats.addWidget(self.lbl_stats)
         self.left_layout.addWidget(gb_stats)
 
-        # --- Ustawienia Histogramu ---
+        # Ustawienia Histogramu
         gb_hist = QGroupBox("Ustawienia Histogramu")
         layout_hist = QVBoxLayout(gb_hist)
         layout_hist.addWidget(QLabel("Liczba przedziałów:"))
@@ -122,7 +129,7 @@ class SignalApp(QMainWindow):
         layout_hist.addWidget(self.scale_hist)
         self.left_layout.addWidget(gb_hist)
 
-        # --- Operacje Plikowe ---
+        # Operacje Plikowe
         gb_files = QGroupBox("Operacje Plikowe")
         layout_files = QVBoxLayout(gb_files)
 
@@ -140,7 +147,6 @@ class SignalApp(QMainWindow):
 
         self.left_layout.addWidget(gb_files)
 
-        # --- Operacje na sygnałach ---
         gb_operations = QGroupBox("Operacje na sygnałach")
         layout_operations = QVBoxLayout(gb_operations)
 
@@ -164,6 +170,41 @@ class SignalApp(QMainWindow):
         layout_operations.addWidget(btn_perform_op)
 
         self.left_layout.addWidget(gb_operations)
+
+        gb_conversion = QGroupBox("Konwersja A/C i C/A")
+        layout_conversion = QVBoxLayout(gb_conversion)
+
+        layout_conversion.addWidget(
+            QLabel("Nowa częstotliwość próbkowania (Hz):"))
+        self.entry_new_f = QLineEdit("50.0")
+        layout_conversion.addWidget(self.entry_new_f)
+
+        layout_conversion.addWidget(QLabel("Liczba bitów kwantyzacji (b):"))
+        self.entry_bits = QLineEdit("8")
+        layout_conversion.addWidget(self.entry_bits)
+
+        layout_conversion.addWidget(QLabel("Metoda rekonstrukcji:"))
+        self.cb_reconstruction = QComboBox()
+        self.cb_reconstruction.addItems(
+            ["Ekstrapolacja zerowego rzędu (ZOH)", "Rekonstrukcja Sinc"])
+        layout_conversion.addWidget(self.cb_reconstruction)
+
+        layout_conversion.addWidget(
+            QLabel("Okno dla Sinc (liczba próbek, puste=wszystkie):"))
+        self.entry_sinc_window = QLineEdit("")
+        layout_conversion.addWidget(self.entry_sinc_window)
+
+        btn_convert = QPushButton("Wykonaj konwersję")
+        btn_convert.clicked.connect(self.perform_conversion)
+        layout_conversion.addWidget(btn_convert)
+
+        self.middle_layout.addWidget(gb_conversion)
+
+        gb_errors = QGroupBox("Miary błędów (po konwersji)")
+        layout_errors = QVBoxLayout(gb_errors)
+        self.lbl_errors = QLabel("MSE: -\nSNR: -\nPSNR: -\nMD: -\nENOB: -")
+        layout_errors.addWidget(self.lbl_errors)
+        self.middle_layout.addWidget(gb_errors)
 
     def update_param_fields(self):
         """Dynamicznie buduje pola wprowadzania danych w zależności od wybranego sygnału."""
@@ -313,6 +354,12 @@ class SignalApp(QMainWindow):
             self.current_signal_time = t
             self.current_signal_values = y
 
+            # reset po konwersji
+            self.reconstructed_signal = None
+            if hasattr(self, 'lbl_errors'):
+                self.lbl_errors.setText(
+                    "MSE: -\nSNR: -\nPSNR: -\nMD: -\nENOB: -")
+
             self.calculate_parameters()
             self.update_plots()
 
@@ -373,15 +420,31 @@ class SignalApp(QMainWindow):
             self.ax_signal.plot(
                 self.current_signal_time,
                 self.current_signal_values,
-                color='blue'
+                color='blue',
+                label='Sygnał oryginalny'
             )
+
+        # zrekonstruowany
+        if hasattr(self, 'reconstructed_signal') and self.reconstructed_signal is not None:
+            self.ax_signal.plot(
+                self.reconstructed_signal.time_axis,
+                self.reconstructed_signal.amplitudes,
+                color='red',
+                label='Sygnał zrekonstruowany',
+                alpha=0.8
+            )
+            self.ax_signal.legend()
 
         self.ax_signal.set_title("Wykres amplitudy od czasu")
         self.ax_signal.set_xlabel("Czas [s]")
         self.ax_signal.set_ylabel("Amplituda")
         self.ax_signal.grid(True)
 
-        self.update_histogram()
+        # co rysować na dolnym wykresie
+        if hasattr(self, 'reconstructed_signal') and self.reconstructed_signal is not None:
+            self.update_error_plot()
+        else:
+            self.update_histogram()
 
     def update_histogram(self):
         if not hasattr(self, 'current_signal') or self.current_signal is None:
@@ -405,6 +468,27 @@ class SignalApp(QMainWindow):
 
         self.ax_hist.set_xticks(bin_edges)
         self.ax_hist.set_xticklabels([f'{val:.2f}' for val in bin_edges])
+
+        self.figure.tight_layout(pad=3.0)
+        self.canvas.draw()
+
+    def update_error_plot(self):
+        """Rysuje sygnał błędu różnicowego (oryginał - rekonstrukcja) zamiast histogramu."""
+        if not hasattr(self, 'current_signal') or not hasattr(self, 'reconstructed_signal'):
+            return
+
+        self.ax_hist.clear()  # dolny wykres
+
+        error_values = self.current_signal.amplitudes - \
+            self.reconstructed_signal.amplitudes
+
+        self.ax_hist.plot(self.current_signal.time_axis,
+                          error_values, color='purple')
+        self.ax_hist.set_title(
+            "Sygnał błędu (różnica między oryginałem a rekonstrukcją)")
+        self.ax_hist.set_xlabel("Czas [s]")
+        self.ax_hist.set_ylabel("Błąd amplitudy")
+        self.ax_hist.grid(True)
 
         self.figure.tight_layout(pad=3.0)
         self.canvas.draw()
@@ -552,6 +636,66 @@ class SignalApp(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Błąd niespodziewany",
                                  f"Wystąpił problem:\n{e}")
+
+    def perform_conversion(self):
+        """Przeprowadza proces S1 -> Q1 -> R1/R3 i liczy miary błędów."""
+        if not hasattr(self, 'current_signal') or self.current_signal is None:
+            QMessageBox.warning(
+                self, "Błąd", "Brak oryginalnego sygnału do konwersji! Wygeneruj najpierw sygnał.")
+            return
+
+        try:
+            new_f = float(self.entry_new_f.text())
+            bits = int(self.entry_bits.text())
+            recon_method = self.cb_reconstruction.currentText()
+
+            sinc_window_str = self.entry_sinc_window.text().strip()
+            sinc_window = int(sinc_window_str) if sinc_window_str else None
+
+            original_signal = self.current_signal
+
+            # Próbkowanie S1
+            sampled_signal = Converters.sample_signal(original_signal, new_f)
+
+            # Kwantyzacja Q1
+            quantized_signal = Converters.quantize_truncation(
+                sampled_signal, bits)
+
+            # Rekonstrukcja R1 lub R3
+            if recon_method == "Ekstrapolacja zerowego rzędu (ZOH)":
+                reconstructed_signal = Converters.reconstruct_zoh(
+                    quantized_signal, original_signal.f)
+            else:
+                reconstructed_signal = Converters.reconstruct_sinc(
+                    quantized_signal, original_signal.f, sinc_window)
+
+            self.reconstructed_signal = reconstructed_signal
+
+            # miary błędów (C1-C4)
+            mse_val = Calculator.mse(original_signal, reconstructed_signal)
+            snr_val = Calculator.snr(original_signal, reconstructed_signal)
+            psnr_val = Calculator.psnr(original_signal, reconstructed_signal)
+            md_val = Calculator.md(original_signal, reconstructed_signal)
+            enob_val = Calculator.enob(snr_val)
+
+            errors_text = (f"MSE: {mse_val:.4f}\n"
+                           f"SNR: {snr_val:.4f} dB\n"
+                           f"PSNR: {psnr_val:.4f} dB\n"
+                           f"MD: {md_val:.4f}\n"
+                           f"ENOB: {enob_val:.4f} bitów")
+            self.lbl_errors.setText(errors_text)
+
+            self.update_plots()
+
+            hist_name = f"[{len(self.signal_history)+1}] Zrekonstr. ({bits}bit, {new_f}Hz)"
+            self.add_to_history(reconstructed_signal, hist_name)
+
+        except ValueError as e:
+            QMessageBox.critical(
+                self, "Błąd wprowadzania", f"Sprawdź poprawność liczb w formularzu.\n\nSzczegóły: {e}")
+        except Exception as e:
+            QMessageBox.critical(self, "Błąd przetwarzania",
+                                 f"Wystąpił błąd:\n{e}")
 
 
 if __name__ == "__main__":
