@@ -9,6 +9,7 @@ from PySide6.QtCore import Qt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 
+from core.Converters import Converters
 from core.FileHandler import FileHandler
 from core.Calculator import Calculator
 from core.Signal import Signal
@@ -24,7 +25,7 @@ class SignalApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Generator i Analizator Sygnałów")
-        self.resize(1200, 800)
+        self.resize(1500, 850)
 
         self.current_signal_time = np.array([])
         self.current_signal_values = np.array([])
@@ -39,17 +40,23 @@ class SignalApp(QMainWindow):
         self.create_widgets()
 
     def create_widgets(self):
-        # Panel lewy (sterowanie)
         self.left_panel = QWidget()
-        self.left_panel.setFixedWidth(450)
+        self.left_panel.setFixedWidth(350)
         self.left_layout = QVBoxLayout(self.left_panel)
         self.left_layout.setAlignment(Qt.AlignTop)
 
-        # Panel prawy (wykresy)
+        # operacje konwersji
+        self.middle_panel = QWidget()
+        self.middle_panel.setFixedWidth(350)
+        self.middle_layout = QVBoxLayout(self.middle_panel)
+        self.middle_layout.setAlignment(Qt.AlignTop)
+
+        # wykresy
         self.right_panel = QWidget()
         self.right_layout = QVBoxLayout(self.right_panel)
 
         self.main_layout.addWidget(self.left_panel)
+        self.main_layout.addWidget(self.middle_panel)
         self.main_layout.addWidget(self.right_panel, stretch=1)
 
         self._build_controls()
@@ -107,7 +114,7 @@ class SignalApp(QMainWindow):
         layout_stats.addWidget(self.lbl_stats)
         self.left_layout.addWidget(gb_stats)
 
-        # --- Ustawienia Histogramu ---
+        # Ustawienia Histogramu
         gb_hist = QGroupBox("Ustawienia Histogramu")
         layout_hist = QVBoxLayout(gb_hist)
         layout_hist.addWidget(QLabel("Liczba przedziałów:"))
@@ -122,7 +129,7 @@ class SignalApp(QMainWindow):
         layout_hist.addWidget(self.scale_hist)
         self.left_layout.addWidget(gb_hist)
 
-        # --- Operacje Plikowe ---
+        # Operacje Plikowe
         gb_files = QGroupBox("Operacje Plikowe")
         layout_files = QVBoxLayout(gb_files)
 
@@ -140,7 +147,6 @@ class SignalApp(QMainWindow):
 
         self.left_layout.addWidget(gb_files)
 
-        # --- Operacje na sygnałach ---
         gb_operations = QGroupBox("Operacje na sygnałach")
         layout_operations = QVBoxLayout(gb_operations)
 
@@ -165,7 +171,6 @@ class SignalApp(QMainWindow):
 
         self.left_layout.addWidget(gb_operations)
 
-        # konwersja ac i ca
         gb_conversion = QGroupBox("Konwersja A/C i C/A")
         layout_conversion = QVBoxLayout(gb_conversion)
 
@@ -193,14 +198,13 @@ class SignalApp(QMainWindow):
         btn_convert.clicked.connect(self.perform_conversion)
         layout_conversion.addWidget(btn_convert)
 
-        self.left_layout.addWidget(gb_conversion)
+        self.middle_layout.addWidget(gb_conversion)
 
-        # miary błędów
         gb_errors = QGroupBox("Miary błędów (po konwersji)")
         layout_errors = QVBoxLayout(gb_errors)
         self.lbl_errors = QLabel("MSE: -\nSNR: -\nPSNR: -\nMD: -\nENOB: -")
         layout_errors.addWidget(self.lbl_errors)
-        self.left_layout.addWidget(gb_errors)
+        self.middle_layout.addWidget(gb_errors)
 
     def update_param_fields(self):
         """Dynamicznie buduje pola wprowadzania danych w zależności od wybranego sygnału."""
@@ -436,7 +440,11 @@ class SignalApp(QMainWindow):
         self.ax_signal.set_ylabel("Amplituda")
         self.ax_signal.grid(True)
 
-        self.update_histogram()
+        # co rysować na dolnym wykresie
+        if hasattr(self, 'reconstructed_signal') and self.reconstructed_signal is not None:
+            self.update_error_plot()
+        else:
+            self.update_histogram()
 
     def update_histogram(self):
         if not hasattr(self, 'current_signal') or self.current_signal is None:
@@ -460,6 +468,27 @@ class SignalApp(QMainWindow):
 
         self.ax_hist.set_xticks(bin_edges)
         self.ax_hist.set_xticklabels([f'{val:.2f}' for val in bin_edges])
+
+        self.figure.tight_layout(pad=3.0)
+        self.canvas.draw()
+
+    def update_error_plot(self):
+        """Rysuje sygnał błędu różnicowego (oryginał - rekonstrukcja) zamiast histogramu."""
+        if not hasattr(self, 'current_signal') or not hasattr(self, 'reconstructed_signal'):
+            return
+
+        self.ax_hist.clear()  # dolny wykres
+
+        error_values = self.current_signal.amplitudes - \
+            self.reconstructed_signal.amplitudes
+
+        self.ax_hist.plot(self.current_signal.time_axis,
+                          error_values, color='purple')
+        self.ax_hist.set_title(
+            "Sygnał błędu (różnica między oryginałem a rekonstrukcją)")
+        self.ax_hist.set_xlabel("Czas [s]")
+        self.ax_hist.set_ylabel("Błąd amplitudy")
+        self.ax_hist.grid(True)
 
         self.figure.tight_layout(pad=3.0)
         self.canvas.draw()
