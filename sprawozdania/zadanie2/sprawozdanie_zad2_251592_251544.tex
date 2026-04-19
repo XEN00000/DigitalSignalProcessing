@@ -73,12 +73,46 @@ Podstawowym elementem jest klasa \texttt{Calculator} i jej metoda \texttt{get\_f
 \end{enumerate}
 
 \section{Eksperymenty i wyniki}
-Aplikacja pozwala na generację sygnałów o zadanej amplitudzie ($A$), czasie początkowym ($t_1$) i czasie trwania ($d$) \cite{1}. Eksperymenty mają na celu sprawdznie działania napisanego programu, oraz wizualizację sygnałów po dokonanych operacjach.
 
-\subsection{Wpływ częstotliwości próbkowania i metody rekonstrukcji na jakość sygnału}
-Celem tego eksperymentu jest zbadanie wpływu doboru częstotliwości próbkowania oraz metody konwersji C/A na błędy rekonstrukcji.\cite{1}.
+\subsection{Wpływ nowej częstotliwości próbkowania na rekonstrukcję sygnału}
+Cel: zbadanie wpływu doboru częstotliwości próbkowania w połączeniu z metodą ekstrapolacji zerowego rzędu (ZOH).\cite{1}.
 
-Ekstrapolacja zerowego rzędu (ZOH) oraz Rekonstrukcja w oparciu o funkcję sinc. 
+
+\begin{table}[H]
+    \centering
+    \vspace{0.2cm}
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Parametr} & \textbf{Wartość} \\ \hline
+        Amplituda ($A$) & 1.0 \\ \hline
+        Czas początkowy ($t_1$) [s] & 0.0 \\ \hline
+        Czas trwania ($d$) [s] & 1.0 \\ \hline
+        Częstotliwość próbkowania ($f$) [kHz] & 10 \\ \hline
+        Częstotliwość sygnału [Hz] & 10.0 \\ \hline
+        Przesunięcie fazowe [rad] & 0.0 \\ \hline
+    \end{tabular}
+    \caption{Parametry oryginalnego sygnału}
+    \label{tab:prametry_oryginalnego_sygnalu}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{exp1/original.png}
+    \caption{Wykres oryginalnego sygnału.}
+    \label{fig:wykres_oryginalnego_sygnalu}
+\end{figure}
+
+
+
+W czasie trwania eksperymentu zostały zbadane częstotliwości próbkowania podczas rekonstrukcji. Zostały one przedstawione wraz z wynikami miar błędów w poniższych tabelach.
+
+
+% new_f = 10 Hz
+% MSE: 0.5000
+% SNR: 0.0000 dB
+% PSNR: 3.0103 dB
+% MD: 1.0000
+% ENOB: -0.2924 bitów
 
 \begin{table}[H]
     \centering
@@ -87,114 +121,159 @@ Ekstrapolacja zerowego rzędu (ZOH) oraz Rekonstrukcja w oparciu o funkcję sinc
         \hline
         \textbf{Parametr} & \textbf{Wartość} \\ \hline
         \multicolumn{2}{|c|}{\textit{Parametry wejściowe}} \\ \hline
-        Amplituda ($A$) & 10.0 \\ \hline
-        Czas początkowy ($t_1$) [s] & 0.0 \\ \hline
-        Czas trwania ($d$) [s] & 2.0 \\ \hline
-        Częstotliwość próbkowania ($f$) [Hz] & 1000.0 \\ \hline
-        Częstotliwość sygnału [Hz] & 2.0 \\ \hline
-        Przesunięcie fazowe [rad] & 0.0 \\ \hline
-        \multicolumn{2}{|c|}{\textit{Wyniki obliczeń (statystyka)}} \\ \hline
-        Wartość średnia & 0.0 \\ \hline
-        Wartość średnia bezwzględna & 6.36 \\ \hline
-        Wartość skuteczna (RMS) & 7.07 \\ \hline
-        Wariancja & 50.0 \\ \hline
-        Moc średnia & 50.0 \\ \hline
-    \end{tabular}
-    \caption{Parametry i wyniki analizy statystycznej sygnału sinusoidalnego (S3)}
-    \label{tab:wyniki_sinus}
-\end{table}
+        Częstotliwość próbkowania ($f$) [Hz] & 10.0 \\ \hline
+        Liczba bitów kwantyzacji (b) & 8 \\ \hline
 
-Jest on powszechnie wykorzystywany w cyfrowym przetwarzaniu sygnałów jako baza do analizy bardziej złożonych przebiegów. Zaimplementowany generator wykorzystuje bibliotekę \texttt{NumPy} do precyzyjnego wyznaczania wartości próbek dla zadanego kroku czasowego.
+        \multicolumn{2}{|c|}{\textit{Miary błędów}} \\ \hline
+        MSE & 0.5 \\ \hline
+        SNR ($dB$) & 0.0 \\ \hline
+        PSNR ($dB$) & 3.0103 \\ \hline
+        MD & 1.0 \\ \hline
+        ENOB (b) & -0.2924 \\ \hline
+    \end{tabular}
+    \caption{Parametry i miary błędów po konwersji}
+    \label{tab:wyniki_rekonstrukcji_10Hz}
+\end{table}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.85\linewidth]{sinus.png}
-    \vspace{0.3cm} % Odstęp między obrazkami
-    \includegraphics[width=0.85\linewidth]{sinus_histogram.png}
-    \caption{Wizualizacja S3 sygnału sinusoidalnego: przebieg czasowy (góra) oraz odpowiadający mu histogram (dół).}
-    \label{fig:sinus_wizualizacja}
+    \includegraphics[width=0.85\linewidth]{exp1/new_f=10Hz.png}
+    \caption{Wykres zrekonstruowanego przy nowej częstotliwości 10Hz}
+    \label{fig:wykres_zrekonstruowanego_sygnalu_10Hz}
 \end{figure}
 
-Szum gaussowski (oznaczony jako S2) to sygnał, w którym amplituda przyjmuje losowe wartości o rozkładzie normalnym (gaussowskim). 
+
+
+% new_f = 40 Hz
+% MSE: 0.3618
+% SNR: 1.4050 dB
+% PSNR: 4.4153 dB
+% MD: 1.0078
+% ENOB: -0.0590 bitów
 
 \begin{table}[H]
     \centering
     \vspace{0.2cm}
     \begin{tabular}{|l|c|}
         \hline
-        \textbf{Parametr / Wynik} & \textbf{Wartość} \\ \hline
+        \textbf{Parametr} & \textbf{Wartość} \\ \hline
         \multicolumn{2}{|c|}{\textit{Parametry wejściowe}} \\ \hline
-        Amplituda ($A$) & 2.0 \\ \hline
-        Czas początkowy ($t_1$) [s] & 0.0 \\ \hline
-        Czas trwania ($d$) [s] & 2.0 \\ \hline
-        Częstotliwość próbkowania ($f$) [Hz] & 1000.0 \\ \hline
-        Średnia rozkładu ($\mu$) & 0.0 \\ \hline
-        Odchylenie standardowe ($\sigma$) & 1.0 \\ \hline
-        \multicolumn{2}{|c|}{\textit{Wyniki obliczeń (statystyka)}} \\ \hline
-        Wartość średnia & 0.0242 \\ \hline
-        Wartość średnia bezwzględna & 1.6182 \\ \hline
-        Wartość skuteczna (RMS) & 2.0303 \\ \hline
-        Wariancja & 4.1214 \\ \hline
-        Moc średnia & 4.1220 \\ \hline
-    \end{tabular}
-    \caption{Parametry i wyniki analizy statystycznej szumu gaussowskiego (S2)}
-    \label{tab:wyniki_szum_gauss}
-\end{table}
+        Częstotliwość próbkowania ($f$) [Hz] & 40.0 \\ \hline
+        Liczba bitów kwantyzacji (b) & 8 \\ \hline
 
-Charakteryzuje się on tym, że większość próbek skupiona jest wokół wartości średniej, a prawdopodobieństwo wystąpienia wartości skrajnych gwałtownie spada zgodnie z funkcją gęstości rozkładu.
+        \multicolumn{2}{|c|}{\textit{Miary błędów}} \\ \hline
+        MSE & 0.3618 \\ \hline
+        SNR ($dB$) & 1.4050 \\ \hline
+        PSNR ($dB$) & 4.4153 \\ \hline
+        MD & 1.0078 \\ \hline
+        ENOB (b) & -0.0590 \\ \hline
+    \end{tabular}
+    \caption{Parametry i miary błędów po konwersji}
+    \label{tab:wyniki_rekonstrukcji_40Hz}
+\end{table}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.85\linewidth]{szum_gausa.png}
-    \caption{Wizualizacja szumu gaussowskiego S2: przebieg czasowy (góra) oraz odpowiadający mu histogram (dół).}
-    \label{fig:szum_wizualizacja}
+    \includegraphics[width=0.85\linewidth]{exp1/new_f=40Hz.png}
+    \caption{Wykres zrekonstruowanego przy nowej częstotliwości 40Hz}
+    \label{fig:wykres_zrekonstruowanego_sygnalu_40Hz}
 \end{figure}
+
+
+% new_f = 400 Hz
+% MSE: 0.0039
+% SNR: 21.0739 dB
+% PSNR: 24.0842 dB
+% MD: 0.1580
+% ENOB: 3.2083 bitów
+
+\begin{table}[H]
+    \centering
+    \vspace{0.2cm}
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Parametr} & \textbf{Wartość} \\ \hline
+        \multicolumn{2}{|c|}{\textit{Parametry wejściowe}} \\ \hline
+        Częstotliwość próbkowania ($f$) [Hz] & 400.0 \\ \hline
+        Liczba bitów kwantyzacji (b) & 8 \\ \hline
+
+        \multicolumn{2}{|c|}{\textit{Miary błędów}} \\ \hline
+        MSE & 0.0039 \\ \hline
+        SNR ($dB$) & 21.0739 \\ \hline
+        PSNR ($dB$) & 24.0842 \\ \hline
+        MD & 0.1580 \\ \hline
+        ENOB (b) & 3.2083 \\ \hline
+    \end{tabular}
+    \caption{Parametry i miary błędów po konwersji}
+    \label{tab:wyniki_rekonstrukcji_400Hz}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{exp1/new_f=400Hz.png}
+    \caption{Wykres zrekonstruowanego przy nowej częstotliwości 400Hz}
+    \label{fig:wykres_zrekonstruowanego_sygnalu_400Hz}
+\end{figure}
+
+Wnioski: 
+
+\begin{itemize}
+\item \textbf{Wpływ twierdzenia Nyquista-Shannona:} Sygnał oryginalny ma częstotliwość 10 Hz, co oznacza, że minimalna częstotliwość próbkowania pozwalająca na jego odtworzenie to 20 Hz.
+Użycie częstotliwości 10 Hz (Tab. \ref{tab:wyniki_rekonstrukcji_10Hz}) łamie ten warunek, co prowadzi do  utraty informacji o sygnale, co pokazuje wykres (Rys. \ref{tab:wyniki_rekonstrukcji_10Hz}) oraz miary błędów: wysoki błąd średniokwadratowy ($MSE = 0.5$) oraz zerowy stosunek sygnału do szumu ($SNR = 0.0$ dB).
+
+\item \textbf{Niedoskonałości ekstrapolacji zerowego rzędu (ZOH):} Metoda ZOH polega na utrzymywaniu stałej wartości próbki aż do momentu pobrania kolejnej, co tworzy widoczne schodki. Z tego powodu, przy małej częstotliwości (40 Hz) spełniającej warunek Nyquista, rekonstrukcja wciąż jest obarczona znacznym błędem ($MSE = 0.3618$, $SNR = 1.4050$ dB) (Tab. \ref{tab:wyniki_rekonstrukcji_40Hz}). Prosta funkcja schodkowa nie jest w stanie płynnie odwzorować dynamicznych zmian sygnału sinusoidalnego przy niewielkiej liczbie próbek na okres.
+
+\item \textbf{Zalety nadpróbkowania:} Znaczne częstotliwości próbkowania do 400 Hz (Tab. \ref{tab:wyniki_rekonstrukcji_400Hz}) skutkuje dużą poprawą jakości odtworzonego sygnału. Błąd $MSE$ spada prawie do zera ($0.0039$), a parametr $SNR$ rośnie do ponad $21$ dB. Przy takim próbkowaniu stopnie generowane przez metodę ZOH stają się na bardzo małe, wykres zrekonstruowanego sygnału w wysokim stopniu aproksymuje oryginalny przebieg ciągły.
+
+\item \textbf{Wniosek końcowy:} Jakość rekonstrukcji sygnału przy użyciu metody ekstrapolacji zerowego rzędu jest silnie uzależniona od częstotliwości próbkowania. Im wyższa jest ta częstotliwość, tym mniejszy wpływ ma niedoskonałość schodkowej natury ZOH, co przekłada się na niższe wartości błędów ($MSE$, $MD$) oraz wyższe wartości wskaźników jakościowych ($SNR$, $PSNR$).
+\end{itemize}
+
 
 \subsection{Eksperyment nr 2: Dodawanie sygnałów (D1)}
 Przeprowadzono operację dodawania sygnału sinusoidalnego i szumu gaussowskiego \cite{1}. 
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\linewidth]{dodanie.png}
-    \caption{Wizualizacja dodania szumu gaussowskiego i sygnału sinusoidalnego: przebieg czasowy (góra) oraz odpowiadający mu histogram (dół).}
-    \label{fig:dodanie_wizualizacja}
-\end{figure}
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.85\linewidth]{dodanie.png}
+%     \caption{Wizualizacja dodania szumu gaussowskiego i sygnału sinusoidalnego: przebieg czasowy (góra) oraz odpowiadający mu histogram (dół).}
+%     \label{fig:dodanie_wizualizacja}
+% \end{figure}
 
 \textbf{Rezultat:} Otrzymano sygnał sinusoidalny z widocznymi oscylacjami szumu wokół przebiegu głównego. Wartość średnia sygnału wynikowego jest zbliżona do sumy wartości średnich obu sygnałów składowych.
 
 \subsection{Eksperyment nr 3: Odejmowanie sygnałów (D2)}
 Od sygnału sinusoidalnego odjęto szum gaussowski \cite{1}.
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\linewidth]{odjecie.png}
-    \caption{Wizualizacja odjęcia szumu gaussowskiego i sygnału sinusoidalnego: przebieg czasowy (góra) oraz odpowiadający mu histogram (dół).}
-    \label{fig:odjecie_wizualizacja}
-\end{figure}
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.85\linewidth]{odjecie.png}
+%     \caption{Wizualizacja odjęcia szumu gaussowskiego i sygnału sinusoidalnego: przebieg czasowy (góra) oraz odpowiadający mu histogram (dół).}
+%     \label{fig:odjecie_wizualizacja}
+% \end{figure}
 
 \textbf{Rezultat:} Operacja ta, podobnie jak dodawanie, skutkuje zaszumieniem sinusoidy, jednak z odwróconą fazą składowej szumowej. Jest to proces fundamentalny przy testowaniu algorytmów odszumiania sygnałów.
 
 \subsection{Eksperyment nr 4: Mnożenie sygnałów (D3)}
 Wykonano mnożenie amplitudy sinusoidy przez wartości szumu gaussowskiego \cite{1}.
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\linewidth]{mnozenie.png}
-    \caption{Wizualizacja mnożenia szumu gaussowskiego i sygnału sinusoidalnego: przebieg czasowy (góra) oraz odpowiadający mu histogram (dół).}
-    \label{fig:mnozenie_wizualizacja}
-\end{figure}
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.85\linewidth]{mnozenie.png}
+%     \caption{Wizualizacja mnożenia szumu gaussowskiego i sygnału sinusoidalnego: przebieg czasowy (góra) oraz odpowiadający mu histogram (dół).}
+%     \label{fig:mnozenie_wizualizacja}
+% \end{figure}
 
 \textbf{Rezultat:} Uzyskano efekt zbliżony do modulacji amplitudy (AM), gdzie szum pełni rolę sygnału modulującego. Amplituda sinusoidy "pulsuje" w rytm zmian losowych szumu, co znacząco zwiększa wariancję sygnału wynikowego.
 
 \subsection{Eksperyment nr 5: Dzielenie sygnałów (D4)}
 Podzielono wartości sygnału sinusoidalnego przez wartości szumu gaussowskiego \cite{1}.
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\linewidth]{dzielenie.png}
-    \caption{Wizualizacja dzielenia szumu gaussowskiego i sygnału sinusoidalnego: przebieg czasowy (góra) oraz odpowiadający mu histogram (dół).}
-    \label{fig:dzielenie_wizualizacja}
-\end{figure}
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[width=0.85\linewidth]{dzielenie.png}
+%     \caption{Wizualizacja dzielenia szumu gaussowskiego i sygnału sinusoidalnego: przebieg czasowy (góra) oraz odpowiadający mu histogram (dół).}
+%     \label{fig:dzielenie_wizualizacja}
+% \end{figure}
 
 \textbf{Rezultat:} Jest to najbardziej niestabilna operacja. W punktach, gdzie wartości szumu (dzielnika) są bliskie zeru, pojawiają się gwałtowne piki (szpilki) o bardzo wysokich amplitudach. Sygnał wynikowy charakteryzuje się ekstremalnie dużą mocą średnią i wariancją, co utrudnia jego klasyczną analizę statystyczną.
 
