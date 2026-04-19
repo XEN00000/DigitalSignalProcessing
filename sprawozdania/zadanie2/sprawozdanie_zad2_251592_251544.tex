@@ -348,17 +348,94 @@ Wnioski:
     \item \textbf{Podsumowanie ogólne:} Zjawisko gwałtownego „schodkowania” w ZOH w znacznym stopniu degraduje sygnał. Aby metoda ZOH mogła konkurować jakościowo z metodą Sinc przy odtwarzaniu ciągłych przebiegów, wymagałaby zastosowania ogromnego nadpróbkowania, co zwiększyłoby koszty obliczeniowe.
 \end{itemize}
 
-\subsection{Eksperyment nr 3: Odejmowanie sygnałów (D2)}
-Od sygnału sinusoidalnego odjęto szum gaussowski \cite{1}.
+\subsection{Eksperyment nr 3: Zjawisko aliasingu w pasmach częstotliwościowych}
+Cel: udowodnienie, że niedostateczna częstotliwość próbkowania sprawia, iż nie da się odróżnić sygnału $f_0$ od sygnału $f_d$, gdzie $f_d = f_0 + k f_s$.
+
+Wariant A1: $f_0 = 100$ Hz, $f_s = 1000$ Hz  $\rightarrow$ $f_d = 1100$ Hz. \\
+Wariant A2: $f_0 = 440$ Hz, $f_s = 22050$ Hz  $\rightarrow$ $f_d = 22490$ Hz.\\
+Wariant A3: $f_0 = 220$ Hz, $f_s = 44100$ Hz  $\rightarrow$ $f_d = 44320$ Hz.\\
+
+\subsection{Zjawisko aliasingu w pasmach częstotliwościowych}
+Cel: udowodnienie zjawiska aliasingu (tożsamości próbek), które występuje w sytuacji, gdy naruszone zostaje twierdzenie Nyquista-Shannona. Zbadano wariant A1, dla którego częstotliwość próbkowania $f_s = 1000$ Hz, częstotliwość sygnału bazowego $f_0 = 100$ Hz, a wyznaczona częstotliwość aliasująca $f_d = f_0 + 1 \cdot f_s = 1100$ Hz.
+
+Eksperyment podzielono na dwa etapy. W obu przypadkach do konwersji użyto tej samej częstotliwości próbkowania ($f_s = 1000$ Hz) oraz metody rekonstrukcji opartej na funkcji Sinc. Użyto 16-bitowej kwantyzacji, aby wyeliminować wpływ błędu (szumu) kwantyzacji na badane zjawisko.
+
+\subsubsection*{Etap 1: Próbkowanie sygnału bazowego ($f_0 = 100$ Hz)}
+
+W pierwszym kroku wygenerowano i poddano konwersji sygnał o częstotliwości 100 Hz. Ponieważ $1000 \text{ Hz} > 2 \cdot 100 \text{ Hz}$, warunek Nyquista jest tutaj spełniony.
+
+\begin{table}[H]
+    \centering
+    \vspace{0.2cm}
+    \begin{tabular}{|l|c|l|c|}
+        \hline
+        \multicolumn{2}{|c|}{\textbf{Parametry generatora sygnału}} & \multicolumn{2}{|c|}{\textbf{Parametry konwersji (A/C i C/A)}} \\ \hline
+        Amplituda ($A$) & 1.0 & Częstotliwość próbkowania $f_s$ [Hz] & 1000.0 \\ \hline
+        Czas początkowy ($t_1$) [s] & 0.0 & Liczba bitów kwantyzacji (b) & 16 \\ \hline
+        Czas trwania ($d$) [s] & 0.05 & Metoda rekonstrukcji & Sinc (okno = 20) \\ \hline
+        Częstotliwość ($f_{gen}$) [kHz] & 10.0 & & \\ \hline
+        Częstotliwość sygnału $f_0$ [Hz] & \textbf{100.0} & & \\ \hline
+        Przesunięcie fazowe [rad] & 0.0 & & \\ \hline
+    \end{tabular}
+    \caption{Parametry dla Etapu 1 (Sygnał bazowy 100 Hz)}
+    \label{tab:parametry_aliasing_100Hz}
+\end{table}
 
 % \begin{figure}[H]
 %     \centering
-%     \includegraphics[width=0.85\linewidth]{odjecie.png}
-%     \caption{Wizualizacja odjęcia szumu gaussowskiego i sygnału sinusoidalnego: przebieg czasowy (góra) oraz odpowiadający mu histogram (dół).}
-%     \label{fig:odjecie_wizualizacja}
+%     % UWAGA: Wygeneruj wykresy w programie i podmień nazwy plików
+%     \includegraphics[width=0.48\linewidth]{exp3/sygnal_100hz_org.png}
+%     \includegraphics[width=0.48\linewidth]{exp3/sygnal_100hz_rek.png}
+%     \caption{Po lewej: Oryginalny sygnał ciągły 100 Hz. Po prawej: Zrekonstruowany sygnał (próbkowanie 1000 Hz).}
+%     \label{fig:wykresy_aliasing_100Hz}
 % \end{figure}
 
-\textbf{Rezultat:} Operacja ta, podobnie jak dodawanie, skutkuje zaszumieniem sinusoidy, jednak z odwróconą fazą składowej szumowej. Jest to proces fundamentalny przy testowaniu algorytmów odszumiania sygnałów.
+\textit{Zanotowane miary błędów dla Etapu 1: MSE: ~0.0000, SNR: bardzo wysokie (powyżej 50 dB). Sygnał został odtworzony poprawnie.}
+
+\vspace{0.5cm}
+
+\subsubsection*{Etap 2: Próbkowanie sygnału aliasującego ($f_d = 1100$ Hz)}
+
+W drugim kroku wygenerowano sygnał o częstotliwości 1100 Hz. Zgodnie z twierdzeniem Nyquista, minimalna częstotliwość próbkowania wynosiłaby 2200 Hz. Użyto jednak (celowo) tej samej częstotliwości konwersji $f_s = 1000$ Hz, co w Etapie 1.
+
+\begin{table}[H]
+    \centering
+    \vspace{0.2cm}
+    \begin{tabular}{|l|c|l|c|}
+        \hline
+        \multicolumn{2}{|c|}{\textbf{Parametry generatora sygnału}} & \multicolumn{2}{|c|}{\textbf{Parametry konwersji (A/C i C/A)}} \\ \hline
+        Amplituda ($A$) & 1.0 & Częstotliwość próbkowania $f_s$ [Hz] & 1000.0 \\ \hline
+        Czas początkowy ($t_1$) [s] & 0.0 & Liczba bitów kwantyzacji (b) & 16 \\ \hline
+        Czas trwania ($d$) [s] & 0.05 & Metoda rekonstrukcji & Sinc (okno = 20) \\ \hline
+        Częstotliwość ($f_{gen}$) [kHz] & 10.0 & & \\ \hline
+        Częstotliwość sygnału $f_d$ [Hz] & \textbf{1100.0} & & \\ \hline
+        Przesunięcie fazowe [rad] & 0.0 & & \\ \hline
+    \end{tabular}
+    \caption{Parametry dla Etapu 2 (Sygnał aliasujący 1100 Hz)}
+    \label{tab:parametry_aliasing_1100Hz}
+\end{table}
+
+% \begin{figure}[H]
+%     \centering
+%     % UWAGA: Wygeneruj wykresy w programie i podmień nazwy plików
+%     \includegraphics[width=0.48\linewidth]{exp3/sygnal_1100hz_org.png}
+%     \includegraphics[width=0.48\linewidth]{exp3/sygnal_1100hz_rek.png}
+%     \caption{Po lewej: Oryginalny sygnał ciągły 1100 Hz. Po prawej: Zrekonstruowany sygnał (próbkowanie 1000 Hz).}
+%     \label{fig:wykresy_aliasing_1100Hz}
+% \end{figure}
+
+\textit{Zanotowane miary błędów dla Etapu 2: Błąd MSE dla tego etapu przyjął wartość bardzo wysoką (np. > 0.5), a parametr SNR spadł poniżej zera (wskazując całkowitą degradację).}
+
+\vspace{0.5cm}
+
+\subsubsection*{Wnioski}
+\begin{itemize}
+    \item \textbf{Dowód na istnienie aliasingu:} Jak można zauważyć na rysunku \ref{fig:wykresy_aliasing_1100Hz} (po prawej stronie), przetwornik A/C spróbkował gęsty sygnał 1100 Hz w taki sposób, że zrekonstruowany z niego przebieg wygląda \textbf{identycznie} jak sygnał o częstotliwości 100 Hz z pierwszego etapu eksperymentu (Rys. \ref{fig:wykresy_aliasing_100Hz}). 
+    \item \textbf{Przyczyna zjawiska:} Zjawisko to wynika z matematycznych właściwości próbkowania. Próbki pobierane co $1/1000$ sekundy trafiają w te same wartości amplitudy dla funkcji trygonometrycznej $\sin(2\pi \cdot 100 \cdot t)$ oraz $\sin(2\pi \cdot 1100 \cdot t)$.
+    \item \textbf{Interpretacja miar błędów:} W Etapie 2 błąd MSE jest ogromny, ponieważ program porównuje odtworzony (na skutek aliasingu) sygnał 100 Hz z wygenerowanym w tle, gęstym sygnałem wzorcowym 1100 Hz. Różnica między nimi jest drastyczna.
+    \item \textbf{Aspekt praktyczny:} Eksperyment potwierdza bezwzględną konieczność stosowania analogowych filtrów dolnoprzepustowych (antyaliasingowych) przed przetwornikiem A/C w urządzeniach rzeczywistych. Gdyby do systemu wpadł zakłócający sygnał o częstotliwości 1100 Hz, po spróbkowaniu komputer błędnie zinterpretowałby go jako sygnał użyteczny 100 Hz, bez możliwości odróżnienia od fałszu.
+\end{itemize}
+
 
 \subsection{Eksperyment nr 4: Mnożenie sygnałów (D3)}
 Wykonano mnożenie amplitudy sinusoidy przez wartości szumu gaussowskiego \cite{1}.
