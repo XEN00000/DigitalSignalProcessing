@@ -229,17 +229,124 @@ Użycie częstotliwości 10 Hz (Tab. \ref{tab:wyniki_rekonstrukcji_10Hz}) łamie
 \end{itemize}
 
 
-\subsection{Eksperyment nr 2: Dodawanie sygnałów (D1)}
-Przeprowadzono operację dodawania sygnału sinusoidalnego i szumu gaussowskiego \cite{1}. 
+\subsection{Eksperyment nr 2: Porównanie metod rekonstrukcji (ZOH i Sinc)}
 
-% \begin{figure}[H]
-%     \centering
-%     \includegraphics[width=0.85\linewidth]{dodanie.png}
-%     \caption{Wizualizacja dodania szumu gaussowskiego i sygnału sinusoidalnego: przebieg czasowy (góra) oraz odpowiadający mu histogram (dół).}
-%     \label{fig:dodanie_wizualizacja}
-% \end{figure}
 
-\textbf{Rezultat:} Otrzymano sygnał sinusoidalny z widocznymi oscylacjami szumu wokół przebiegu głównego. Wartość średnia sygnału wynikowego jest zbliżona do sumy wartości średnich obu sygnałów składowych.
+Cel: porównanie zachowań przy dwóch różnych metodach rekonstrukcji w niskiej częstotliwości próbkowania. Dodatkowo zbadany zostanie wpływ szerokości okna w metodzie Sinc na dokładność rekonstrukcji.
+
+W czasie trwania eksperymentu wykonano konwersję sygnału używając różnych metod i parametrów. Zostały one przedstawione wraz z wynikami miar błędów w poniższych tabelach.
+
+% Metoda: ZOH, new_f = 40 Hz
+% MSE: 0.3618
+% SNR: 1.4052 dB
+% PSNR: 4.4155 dB
+% MD: 1.0000
+% ENOB: -0.0589 bitów
+
+\begin{table}[H]
+    \centering
+    \vspace{0.2cm}
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Parametr} & \textbf{Wartość} \\ \hline
+        \multicolumn{2}{|c|}{\textit{Parametry wejściowe}} \\ \hline
+        Częstotliwość próbkowania ($f$) [Hz] & 40.0 \\ \hline
+        Metoda rekonstrukcji & ZOH \\ \hline
+        
+        \multicolumn{2}{|c|}{\textit{Miary błędów}} \\ \hline
+        MSE & 0.3618 \\ \hline
+        SNR ($dB$) & 1.4052 \\ \hline
+        PSNR ($dB$) & 4.4155 \\ \hline
+        MD & 1.0000 \\ \hline
+        ENOB (b) & -0.0589 \\ \hline
+    \end{tabular}
+    \caption{Parametry i miary błędów po konwersji (Metoda ZOH)}
+    \label{tab:wyniki_zoh_40Hz}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{exp2/zoh_40hz.png}
+    \caption{Wykres zrekonstruowanego sygnału przy użyciu metody ZOH (40 Hz)}
+    \label{fig:wykres_zoh_40hz}
+\end{figure}
+
+% Metoda: Sinc, okno = 20, new_f = 40 Hz
+% MSE: 0.0011
+% SNR: 26.4639 dB
+% PSNR: 29.4742 dB
+% MD: 0.1682
+% ENOB: 4.1036 bitów
+
+\begin{table}[H]
+    \centering
+    \vspace{0.2cm}
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Parametr} & \textbf{Wartość} \\ \hline
+        \multicolumn{2}{|c|}{\textit{Parametry wejściowe}} \\ \hline
+        Częstotliwość próbkowania ($f$) [Hz] & 40.0 \\ \hline
+        Metoda rekonstrukcji & Sinc (okno = 20) \\ \hline
+        
+        \multicolumn{2}{|c|}{\textit{Miary błędów}} \\ \hline
+        MSE & 0.0011 \\ \hline
+        SNR ($dB$) & 26.4639 \\ \hline
+        PSNR ($dB$) & 29.4742 \\ \hline
+        MD & 0.1682 \\ \hline
+        ENOB (b) & 4.1036 \\ \hline
+    \end{tabular}
+    \caption{Parametry i miary błędów po konwersji (Sinc, okno=20)}
+    \label{tab:wyniki_sinc_40Hz_w20}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{exp2/sinc_40hz_w20.png}
+    \caption{Wykres zrekonstruowanego sygnału przy użyciu funkcji Sinc (okno=20)}
+    \label{fig:wykres_sinc_40hz_w20}
+\end{figure}
+
+% Metoda: Sinc, okno = 200, new_f = 40 Hz
+% MSE: 0.0012
+% SNR: 26.1052 dB
+% PSNR: 29.1155 dB
+% MD: 0.1643
+% ENOB: 4.0440 bitów
+
+\begin{table}[H]
+    \centering
+    \vspace{0.2cm}
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Parametr} & \textbf{Wartość} \\ \hline
+        \multicolumn{2}{|c|}{\textit{Parametry wejściowe}} \\ \hline
+        Częstotliwość próbkowania ($f$) [Hz] & 40.0 \\ \hline
+        Metoda rekonstrukcji & Sinc (okno = 200) \\ \hline
+        
+        \multicolumn{2}{|c|}{\textit{Miary błędów}} \\ \hline
+        MSE & 0.0012 \\ \hline
+        SNR ($dB$) & 26.1052 \\ \hline
+        PSNR ($dB$) & 29.1155 \\ \hline
+        MD & 0.1643 \\ \hline
+        ENOB (b) & 4.0440 \\ \hline
+    \end{tabular}
+    \caption{Parametry i miary błędów po konwersji (Sinc, okno=200)}
+    \label{tab:wyniki_sinc_40Hz_w200}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{exp2/sinc_40hz_w200.png}
+    \caption{Wykres zrekonstruowanego sygnału przy użyciu funkcji Sinc (okno=200)}
+    \label{fig:wykres_sinc_40hz_w200}
+\end{figure}
+
+Wnioski:
+\begin{itemize}
+    \item \textbf{Znaczna przewaga funkcji Sinc:} Przy tej samej, stosunkowo niskiej częstotliwości próbkowania (40 Hz), rekonstrukcja oparta na funkcji Sinc daje lepsze rezultaty niż ekstrapolacja zerowego rzędu. Błąd średniokwadratowy ($MSE$) dla metody ZOH wynosi aż $0.3618$, podczas gdy zastosowanie funkcji Sinc drastycznie redukuje go do poziomu $0.0011$. Z kolei wskaźnik stosunku sygnału do szumu ($SNR$) wzrasta z marginalnego $1.4$ dB dla ZOH do blisko $26.5$ dB dla metody Sinc.
+    \item \textbf{Wpływ szerokości okna w metodzie Sinc:} Zwiększenie szerokości okna z 20 do 200 próbek nie przyniosło istotnej poprawy parametrów jakościowych. Co więcej, zauważalny jest minimalny spadek wartości $SNR$ z $26.46$ dB do $26.10$ dB oraz wzrost błędu $MSE$ z $0.0011$ do $0.0012$. Zjawisko to sugeruje, że dla analizowanego sygnału okno o szerokości 20 jest optymalne, a zbyt szerokie okno uwzględnia odległe czasowo próbki, co w połączeniu z efektem obcięcia sygnału na brzegach analizowanego przedziału może wprowadzać nieznaczne błędy.
+    \item \textbf{Podsumowanie ogólne:} Zjawisko gwałtownego „schodkowania” w ZOH w znacznym stopniu degraduje sygnał. Aby metoda ZOH mogła konkurować jakościowo z metodą Sinc przy odtwarzaniu ciągłych przebiegów, wymagałaby zastosowania ogromnego nadpróbkowania, co zwiększyłoby koszty obliczeniowe.
+\end{itemize}
 
 \subsection{Eksperyment nr 3: Odejmowanie sygnałów (D2)}
 Od sygnału sinusoidalnego odjęto szum gaussowski \cite{1}.
