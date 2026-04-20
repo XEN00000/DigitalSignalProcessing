@@ -11,11 +11,11 @@
 \newcommand{\BibTeX}{{\sc Bib}\TeX} 
 \setlength{\textheight}{21cm}
 
-\title{{\bf Zadanie nr 1 -- Generacja sygnału i szumu}\linebreak
+\title{{\bf Zadanie nr 2 -- Próbkowanie i kwantyzacja}\linebreak
 Cyfrowe Przetwarzanie Sygnałów}
 
 \author{Łukasz Murza, 251592 \and Aleksander Kaźmierczak, 251544}
-\date{22 marca 2026}
+\date{20.04.2026}
 
 \begin{document}
 
@@ -25,51 +25,17 @@ Cyfrowe Przetwarzanie Sygnałów}
 \setcounter{page}{1}
 
 \section{Cel zadania}
-Celem ćwiczenia jest zapoznanie się z wybranymi własnościami podstawowych rodzajów sygnałów oraz implementacja aplikacji umożliwiającej ich generację, analizę statystyczną oraz wizualizację \cite{1}. Zadanie obejmuje stworzenie narzędzi do pracy z sygnałami ciągłymi (próbkowanymi) i dyskretnymi, a także wykonywanie podstawowych operacji arytmetycznych na ich amplitudach \cite{1}.
+Celem zadania jest empiryczne zbadanie zjawisk i mechanizmów zachodzących podczas zamiany sygnałów ciągłych na postać dyskretną (konwersja A/C) oraz ich ponownej rekonstrukcji do postaci analogowej (konwersja C/A).
 
 \section{Wstęp teoretyczny}
-W ramach zadania zaimplementowano generator obsługujący 11 wariantów sygnałów i szumów, w tym szum o rozkładzie jednostajnym, szum gaussowski oraz sygnały okresowe, takie jak sinusoida czy sygnał prostokątny \cite{1}. 
+Przejście z sygnałów ciągłych do dziedziny cyfrowej wymaga przeprowadzenia konwersji analogowo-cyfrowej (A/C), na którą składa się próbkowanie w czasie oraz kwantyzacja amplitudy \cite{1}. Próbkowanie równomierne dyskretyzuje sygnał z zadaną częstotliwością, natomiast kwantyzacja (realizowana poprzez obcięcie lub zaokrąglenie) przypisuje próbkom wartości z ograniczonej puli poziomów, co wprowadza nieodwracalny szum kwantyzacji.
 
-Istotnym elementem analizy jest wyznaczanie parametrów statystycznych sygnału \cite{1}. Dla sygnałów dyskretnych (próbkowanych) zaimplementowano następujące wzory:
-\begin{itemize}
-    \item \textbf{Wartość średnia:} $\overline{x}=\frac{1}{n_{2}-n_{1}+1}\sum_{n=n_{1}}^{n_{2}}x(n)$ \cite{1}.
-    \item \textbf{Wariancja:} $\sigma_{x}^{2}=\frac{1}{n_{2}-n_{1}+1}\sum_{n=n_{1}}^{n_{2}}[x(n)-\overline{x}]^{2}$ \cite{1}.
-    \item \textbf{Wartość skuteczna (RMS):} $x_{RMS}=\sqrt{\frac{1}{n_{2}-n_{1}+1}\sum_{n=n_{1}}^{n_{2}}x^{2}(n)}$ \cite{1}.
-\end{itemize}
-
-W programie zaimplementowano dodatkowe parametry analizy energetycznej sygnału:
-\begin{itemize}
-    \item \textbf{Średnia wartość bezwzględna:} $|\overline{x}| = \frac{1}{n} \sum_{n=1}^{n} |x(n)|$.
-    \item \textbf{Moc średnia:} $P_x = \frac{1}{n} \sum_{n=1}^{n} |x(n)|^2$.
-\end{itemize}
-
-W przypadku sygnałów okresowych, obliczenia są prowadzone dla całkowitej liczby okresów, z pominięciem niepełnych cykli w przyjętym zakresie czasu \cite{1}.
-
-\section{Opis implementacji}
-Aplikacja została zaimplementowana w języku \texttt{Python} z wykorzystaniem biblioteki \texttt{PySide6} do budowy interfejsu graficznego. Obliczenia numeryczne zrealizowano przy pomocy biblioteki \texttt{NumPy}, a wizualizację sygnałów i histogramów za pomocą \texttt{Matplotlib}. W celu zapewnienia stabilności działania aplikacji podczas operacji dzielenia (D4), w klasie \texttt{Signal} zastosowano mechanizm \texttt{np.errstate} z biblioteki \texttt{NumPy}. Pozwala on na kontrolowaną obsługę wyjątków zmiennoprzecinkowych, takich jak dzielenie przez zero (\textit{divide by zero}) oraz operacje na wartościach nieokreślonych (\textit{invalid}). Zrezygnowano również z dodawania małej wartości (epsilon) do mianownika na rzecz wiernego odwzorowania matematycznego charakteru operacji. W miejscach, gdzie wartości dzielnika dążą do zera, wynikowa amplituda dąży do nieskończoności. Błędy te są ignorowane programowo, co pozwala na wygenerowanie i analizę sygnału wynikowego bez przerywania pracy aplikacji.
-
-\subsection{Format zapisu binarnego}
-Zgodnie z wymaganiami, zaimplementowano własny format binarny zapisu sygnału dyskretnego. Plik składa się z 21-bajtowego nagłówka oraz ciągu próbek:
-\begin{itemize}
-    \item \textbf{Nagłówek (21 bajtów):}
-    \begin{itemize}
-        \item Czas początkowy $t_1$ (8 bajtów, \texttt{double}),
-        \item Częstotliwość próbkowania $f$ (8 bajtów, \texttt{double}),
-        \item Flaga sygnału zespolonego (1 bajt, \texttt{bool}),
-        \item Liczba próbek (4 bajty, \texttt{int}).
-    \end{itemize}
-    \item \textbf{Dane:} Wartości amplitud zapisane jako liczby zmiennoprzecinkowe podwójnej precyzji (\texttt{float64}).
-\end{itemize}
-
-\subsection{Algorytm obliczeniowy dla sygnałów okresowych}
-Podstawowym elementem jest klasa \texttt{Calculator} i jej metoda \texttt{get\_full\_periods\_data}, która automatycznie wykrywa czas trwania sygnału i przycina dane tak, aby obliczenia parametrów statystycznych (średnia, RMS, wariancja) odbywały się wyłącznie na pełnej liczbie okresów $T$. Zapobiega to błędom estymacji parametrów dla sygnałów o krótkim czasie trwania.
+Procesem odwrotnym jest konwersja cyfrowo-analogowa (C/A), pozwalająca na rekonstrukcję pierwotnego przebiegu. W tym celu wykorzystuje się metody takie jak ekstrapolacja zerowego rzędu (ZOH) czy rekonstrukcja w oparciu o funkcję Sinc \cite{1}. Aby obiektywnie ocenić jakość odwzorowania oraz wpływ wybranych parametrów na zniekształcenia, stosuje się miary błędów. Należą do nich błąd średniokwadratowy (MSE), stosunek sygnału do szumu (SNR i PSNR), maksymalna różnica (MD) oraz wyznaczana na ich podstawie efektywna liczba bitów (ENOB) \cite{1}.
 
 \section{Instrukcja obsługi aplikacji}
 \begin{enumerate}
     \item \textbf{Generacja:} Należy wybrać typ sygnału z listy rozwijanej (np. Sygnał Sinusoidalny), uzupełnić parametry w formularzu i kliknąć przycisk \textit{Generuj}.
-    \item \textbf{Analiza:} Po wygenerowaniu, w panelu \textit{Parametry Sygnału} automatycznie wyświetlą się obliczone wartości statystyczne.
-    \item \textbf{Histogram:} Suwak w sekcji \textit{Ustawienia Histogramu} pozwala na płynną zmianę liczby przedziałów (od 5 do 20) \cite{1}.
-    \item \textbf{Operacje:} Aplikacja posiada system historii. Aby wykonać operację (np. dodawanie), należy wybrać dwa wcześniej wygenerowane lub wczytane sygnały z list \textit{Sygnał 1} i \textit{Sygnał 2}, wybrać rodzaj działania i kliknąć \textit{Wykonaj operację}.
+    \item \textbf{Rekonstrukcja:} W panelu konwersji, ustalić nową częstotliwość próbkowania oraz liczbę bitów kwantyzacji, wybrać pożądaną metodę z listy (np. Ekstrapolacja zerowego rzędu lub Rekonstrukcja Sinc) i nacisnąć przycisk \textit{Wykonaj konwersję}. Wyniki zostaną wyświetlone na wykresach wraz z obliczonymi miarami błędów.
 \end{enumerate}
 
 \section{Eksperymenty i wyniki}
@@ -349,14 +315,7 @@ Wnioski:
 \end{itemize}
 
 \subsection{Eksperyment nr 3: Zjawisko aliasingu w pasmach częstotliwościowych}
-Cel: udowodnienie, że niedostateczna częstotliwość próbkowania sprawia, iż nie da się odróżnić sygnału $f_0$ od sygnału $f_d$, gdzie $f_d = f_0 + k f_s$. Zbadano wariant A1, dla którego częstotliwość próbkowania $f_s = 1000$ Hz, częstotliwość sygnału bazowego $f_0 = 100$ Hz oraz wyznaczona częstotliwość aliasująca $f_d = f_0 + 1 \cdot f_s = 1100$ Hz.
-
-Warianty testowe:
-\begin{itemize}
-    \item A1: $f_0 = 100$ Hz, $f_s = 1000$ Hz $\rightarrow$ $f_d = 1100$ Hz.
-    \item A2: $f_0 = 440$ Hz, $f_s = 22050$ Hz $\rightarrow$ $f_d = 22490$ Hz.
-    \item A3: $f_0 = 220$ Hz, $f_s = 44100$ Hz $\rightarrow$ $f_d = 44320$ Hz.
-\end{itemize}
+Cel: udowodnienie, że niedostateczna częstotliwość próbkowania sprawia, iż nie da się odróżnić sygnału $f_0$ od sygnału $f_d$, gdzie $f_d = f_0 + k f_s$. Zbadano sygnał, którego częstotliwość próbkowania $f_s = 1000$ Hz, częstotliwość sygnału bazowego $f_0 = 100$ Hz oraz wyznaczona częstotliwość aliasująca $f_d = f_0 + 1 \cdot f_s = 1100$ Hz.
 
 Eksperyment podzielono na dwa etapy. W obu przypadkach do konwersji użyto tej samej częstotliwości próbkowania ($f_s = 1000$ Hz) oraz metody rekonstrukcji opartej na funkcji Sinc. Użyto 16-bitowej kwantyzacji, aby wyeliminować wpływ błędu (szumu) kwantyzacji na badane zjawisko.
 
@@ -435,64 +394,15 @@ W drugim kroku wygenerowano sygnał o częstotliwości 1100 Hz. Zgodnie z twierd
 \end{itemize}
 
 
-\subsection{Eksperyment nr 4: Mnożenie sygnałów (D3)}
-Wykonano mnożenie amplitudy sinusoidy przez wartości szumu gaussowskiego \cite{1}.
-
-% \begin{figure}[H]
-%     \centering
-%     \includegraphics[width=0.85\linewidth]{mnozenie.png}
-%     \caption{Wizualizacja mnożenia szumu gaussowskiego i sygnału sinusoidalnego: przebieg czasowy (góra) oraz odpowiadający mu histogram (dół).}
-%     \label{fig:mnozenie_wizualizacja}
-% \end{figure}
-
-\textbf{Rezultat:} Uzyskano efekt zbliżony do modulacji amplitudy (AM), gdzie szum pełni rolę sygnału modulującego. Amplituda sinusoidy "pulsuje" w rytm zmian losowych szumu, co znacząco zwiększa wariancję sygnału wynikowego.
-
-\subsection{Eksperyment nr 5: Dzielenie sygnałów (D4)}
-Podzielono wartości sygnału sinusoidalnego przez wartości szumu gaussowskiego \cite{1}.
-
-% \begin{figure}[H]
-%     \centering
-%     \includegraphics[width=0.85\linewidth]{dzielenie.png}
-%     \caption{Wizualizacja dzielenia szumu gaussowskiego i sygnału sinusoidalnego: przebieg czasowy (góra) oraz odpowiadający mu histogram (dół).}
-%     \label{fig:dzielenie_wizualizacja}
-% \end{figure}
-
-\textbf{Rezultat:} Jest to najbardziej niestabilna operacja. W punktach, gdzie wartości szumu (dzielnika) są bliskie zeru, pojawiają się gwałtowne piki (szpilki) o bardzo wysokich amplitudach. Sygnał wynikowy charakteryzuje się ekstremalnie dużą mocą średnią i wariancją, co utrudnia jego klasyczną analizę statystyczną.
-
-\subsection{Zbiorcze wyniki wszystkich przeprowadzonych eksperymentów}
-
-\begin{table}[H]
-    \centering
-    \vspace{0.2cm}
-    \begin{tabular}{l c c c}
-        \hline\hline\\[-0.4cm]
-        \textbf{Operacja} & \textbf{Wartość średnia} & \textbf{Wariancja} & \textbf{Wartość skut.} \\[0.1cm]
-        \hline
-        S1: Sinus    & 0.00  & 50.00 & 7.07 \\
-        S2: Szum     & 0.02  & 4.12  & 2.03 \\
-        \hline
-        \textbf{D1: Dodawanie}   & 0.02  & 52.45 & 7.24 \\
-        \textbf{D2: Odejmowanie} & -0.02 & 55.80 & 7.47 \\
-        \textbf{D3: Mnożenie}    & -0.84 & 208.33 & 14.46 \\
-        \textbf{D4: Dzielenie}   & 5.69  & 35279.57 & 187.91 \\ [0.1cm]
-        \hline
-    \end{tabular}
-    \caption{Statystki po operacjach (D1--D4) – wartości zaokrąglone}
-    \label{tab:wyniki_operacji_zaokraglone}
-\end{table}
-
 \section{Wnioski}
-
-\subsection*{Podsumowanie eksperymentów}
-Implementacja algorytmów obliczeniowych potwierdziła, że parametry takie jak wartość skuteczna i moc średnia są niezbędne dla energetycznej oceny sygnału \cite{1}. Zastosowanie wymogu obliczeń dla pełnych okresów sygnałów periodycznych znacząco redukuje błędy estymacji wartości średniej i wariancji. Aplikacja poprawnie obsługuje eksport danych do formatu binarnego, co pozwala na dalszą obróbkę sygnałów w kolejnych etapach laboratorium \cite{1}.
 
 \subsection*{Wnioski szczegółowe z eksperymentów}
 
 \subsubsection*{1. Znaczenie częstotliwości próbkowania}
-Eksperymenty 1 i 2 dowiodły, że częstotliwość próbkowania jest kluczowym parametrem determinującym jakość rekonstrukcji sygnału. Przy próbkowaniu poniżej granicy Nyquista ($f_s < 2 f_{max}$) metoda ZOH wprowadza znaczne zniekształcenia (MSE = 0.3618 dla 40 Hz). Zastosowanie rekonstrukcji opartej na funkcji Sinc drastycznie poprawia wyniki nawet przy niskiej częstotliwości próbkowania (MSE = 0.0011 dla tej samej konfiguracji). Zarówno metoda ZOH, jak i Sinc wymagają jednak wystarczająco wysokiej próbkowania — algorytm ZOH potrzebuje znacznego nadpróbkowania, a metoda Sinc pozostaje efektywna przy rozumnych okienkach (szerokość okna 20 vs 200 nie daje istotnej poprawy).
+Eksperymenty 1 i 2 dowiodły, że częstotliwość próbkowania jest kluczowym parametrem determinującym jakość rekonstrukcji sygnału. Przy próbkowaniu poniżej granicy Nyquista ($f_s < 2 f_{max}$) metoda ZOH wprowadza znaczne zniekształcenia (MSE = 0.3618 dla 40 Hz). Zastosowanie rekonstrukcji opartej na funkcji Sinc drastycznie poprawia wyniki nawet przy niskiej częstotliwości próbkowania (MSE = 0.0011 dla tej samej konfiguracji). Zarówno metoda ZOH, jak i Sinc wymagają jednak wystarczająco wysokiej próbkowania — algorytm ZOH potrzebuje znacznego nadpróbkowania, a metoda Sinc pozostaje efektywna przy rozsądnym dobieraniu okien (szerokość okna 20 vs 200 nie daje istotnej poprawy).
 
 \subsubsection*{2. Znaczenie aliasingu}
-Eksperyment 3 zademonstrował fundamentalne ograniczenie cyfrowego przetwarzania sygnałów — zjawisko aliasingu. Przy próbkowaniu sygnału 1100 Hz częstotliwością 1000 Hz, zrekonstruowany przebieg jest \textbf{praktycznie identyczny} z sygnałem 100 Hz próbkowanym tą samą częstotliwością. Matematycznie, próbki pobierane co $T_s = 1$ ms trafiają w te same amplitudy dla obu sygnałów, co wynika z periodyczności funkcji sinus. Błąd porównania (MSE >> 0.5, SNR << 0 dB) jest ogromny, ponieważ program porównuje odtworzony (aliasowany) sygnał 100 Hz z oryginalnym sygnałem 1100 Hz. W praktyce urządzenia cyfrowe nie mogą odróżnić oryginału od aliasu — wymagane są zatem filtry antyaliasingowe przed przetwornikiem A/C.
+Eksperyment 3 zademonstrował fundamentalne ograniczenie cyfrowego przetwarzania sygnałów — zjawisko aliasingu. Przy próbkowaniu sygnału 1100 Hz częstotliwością 1000 Hz, zrekonstruowany przebieg jest \textbf{praktycznie identyczny} z sygnałem 100 Hz próbkowanym tą samą częstotliwością. Matematycznie, próbki pobierane co $T_s = 1$ ms trafiają w te same amplitudy dla obu sygnałów, co wynika z periodyczności funkcji sinus. Błąd porównania (MSE >> 0.5, SNR << 0 dB) jest ogromny, ponieważ program porównuje odtworzony (aliasowany) sygnał 100 Hz z oryginalnym sygnałem 1100 Hz. W praktyce urządzenia cyfrowe nie mogą odróżnić oryginału od aliasu - wymagane są zatem filtry antyaliasingowe przed przetwornikiem A/C.
 
 \subsubsection*{3. Znaczenie praktyczne}
 Wszystkie eksperymenty potwierdzają, że projektowanie systemów akwizycji danych wymaga:
@@ -502,11 +412,11 @@ Wszystkie eksperymenty potwierdzają, że projektowanie systemów akwizycji dany
     \item Stosowania filtrów dolnoprzepustowych przed A/C w celu eliminacji składowych powyżej $f_{max}$,
     \item Wybrania odpowiedniej metody rekonstrukcji sygnału w zależności od dostępnych zasobów obliczeniowych (ZOH dla szybkich operacji, Sinc dla wyższej jakości).
 \end{enumerate}
-Zaniedbanie któregokolwiek z tych warunków prowadzi do utraty informacji i niemożliwości wiernego odtworzenia oryginalnego przebiegu.
+Zaniedbanie któregokolwiek z tych warunków prowadzi do utraty informacji i uniemożliwia  wiarygodne odtworzenie oryginalnego przebiegu.
 
 
 \begin{thebibliography}{1}
-\bibitem{1} Instrukcja do zadania 1: Generacja sygnału i szumu.
+\bibitem{1} Instrukcja do zadania 2
 \end{thebibliography}
 
 \end{document}
