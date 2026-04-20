@@ -326,15 +326,22 @@ W pierwszym kroku wygenerowano i poddano konwersji sygnał o częstotliwości 10
 \begin{table}[H]
     \centering
     \vspace{0.2cm}
-    \begin{tabular}{|l|c|l|c|}
+    \begin{tabular}{|l|c|}
         \hline
-        \multicolumn{2}{|c|}{\textbf{Parametry generatora sygnału}} & \multicolumn{2}{|c|}{\textbf{Parametry konwersji (A/C i C/A)}} \\ \hline
-        Amplituda ($A$) & 1.0 & Częstotliwość próbkowania $f_s$ [Hz] & 1000.0 \\ \hline
-        Czas początkowy ($t_1$) [s] & 0.0 & Liczba bitów kwantyzacji (b) & 16 \\ \hline
-        Czas trwania ($d$) [s] & 0.05 & Metoda rekonstrukcji & Sinc (okno = 20) \\ \hline
-        Częstotliwość ($f_{gen}$) [kHz] & 10.0 & & \\ \hline
-        Częstotliwość sygnału $f_0$ [Hz] & \textbf{100.0} & & \\ \hline
-        Przesunięcie fazowe [rad] & 0.0 & & \\ \hline
+        \textbf{Parametr} & \textbf{Wartość} \\ \hline
+        
+        \multicolumn{2}{|c|}{\textit{Parametry generatora sygnału}} \\ \hline
+        Amplituda ($A$) & 1.0 \\ \hline
+        Czas początkowy ($t_1$) [s] & 0.0 \\ \hline
+        Czas trwania ($d$) [s] & 0.05 \\ \hline
+        Częstotliwość ($f_{gen}$) [kHz] & 10.0 \\ \hline
+        Częstotliwość sygnału $f_0$ [Hz] & \textbf{100.0} \\ \hline
+        Przesunięcie fazowe [rad] & 0.0 \\ \hline
+        
+        \multicolumn{2}{|c|}{\textit{Parametry konwersji (A/C i C/A)}} \\ \hline
+        Częstotliwość próbkowania $f_s$ [Hz] & 1000.0 \\ \hline
+        Liczba bitów kwantyzacji (b) & 16 \\ \hline
+        Metoda rekonstrukcji & Sinc (okno = 20) \\ \hline
     \end{tabular}
     \caption{Parametry dla Etapu 1 (Sygnał bazowy 100 Hz)}
     \label{tab:parametry_aliasing_100Hz}
@@ -355,19 +362,25 @@ W pierwszym kroku wygenerowano i poddano konwersji sygnał o częstotliwości 10
 \subsubsection*{Etap 2: Próbkowanie sygnału aliasującego ($f_d = 1100$ Hz)}
 
 W drugim kroku wygenerowano sygnał o częstotliwości 1100 Hz. Zgodnie z twierdzeniem Nyquista, minimalna częstotliwość próbkowania wynosiłaby 2200 Hz. Użyto jednak (celowo) tej samej częstotliwości konwersji $f_s = 1000$ Hz, co w Etapie 1.
-
 \begin{table}[H]
     \centering
     \vspace{0.2cm}
-    \begin{tabular}{|l|c|l|c|}
+    \begin{tabular}{|l|c|}
         \hline
-        \multicolumn{2}{|c|}{\textbf{Parametry generatora sygnału}} & \multicolumn{2}{|c|}{\textbf{Parametry konwersji (A/C i C/A)}} \\ \hline
-        Amplituda ($A$) & 1.0 & Częstotliwość próbkowania $f_s$ [Hz] & 1000.0 \\ \hline
-        Czas początkowy ($t_1$) [s] & 0.0 & Liczba bitów kwantyzacji (b) & 16 \\ \hline
-        Czas trwania ($d$) [s] & 0.05 & Metoda rekonstrukcji & Sinc (okno = 20) \\ \hline
-        Częstotliwość ($f_{gen}$) [kHz] & 10.0 & & \\ \hline
-        Częstotliwość sygnału $f_d$ [Hz] & \textbf{1100.0} & & \\ \hline
-        Przesunięcie fazowe [rad] & 0.0 & & \\ \hline
+        \textbf{Parametr} & \textbf{Wartość} \\ \hline
+        
+        \multicolumn{2}{|c|}{\textit{Parametry generatora sygnału}} \\ \hline
+        Amplituda ($A$) & 1.0 \\ \hline
+        Czas początkowy ($t_1$) [s] & 0.0 \\ \hline
+        Czas trwania ($d$) [s] & 0.05 \\ \hline
+        Częstotliwość ($f_{gen}$) [kHz] & 10.0 \\ \hline
+        Częstotliwość sygnału $f_d$ [Hz] & \textbf{1100.0} \\ \hline
+        Przesunięcie fazowe [rad] & 0.0 \\ \hline
+        
+        \multicolumn{2}{|c|}{\textit{Parametry konwersji (A/C i C/A)}} \\ \hline
+        Częstotliwość próbkowania $f_s$ [Hz] & 1000.0 \\ \hline
+        Liczba bitów kwantyzacji (b) & 16 \\ \hline
+        Metoda rekonstrukcji & Sinc (okno = 20) \\ \hline
     \end{tabular}
     \caption{Parametry dla Etapu 2 (Sygnał aliasujący 1100 Hz)}
     \label{tab:parametry_aliasing_1100Hz}
