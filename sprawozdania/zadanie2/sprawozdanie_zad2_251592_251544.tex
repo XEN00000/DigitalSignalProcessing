@@ -349,14 +349,14 @@ Wnioski:
 \end{itemize}
 
 \subsection{Eksperyment nr 3: Zjawisko aliasingu w pasmach częstotliwościowych}
-Cel: udowodnienie, że niedostateczna częstotliwość próbkowania sprawia, iż nie da się odróżnić sygnału $f_0$ od sygnału $f_d$, gdzie $f_d = f_0 + k f_s$.
+Cel: udowodnienie, że niedostateczna częstotliwość próbkowania sprawia, iż nie da się odróżnić sygnału $f_0$ od sygnału $f_d$, gdzie $f_d = f_0 + k f_s$. Zbadano wariant A1, dla którego częstotliwość próbkowania $f_s = 1000$ Hz, częstotliwość sygnału bazowego $f_0 = 100$ Hz oraz wyznaczona częstotliwość aliasująca $f_d = f_0 + 1 \cdot f_s = 1100$ Hz.
 
-Wariant A1: $f_0 = 100$ Hz, $f_s = 1000$ Hz  $\rightarrow$ $f_d = 1100$ Hz. \\
-Wariant A2: $f_0 = 440$ Hz, $f_s = 22050$ Hz  $\rightarrow$ $f_d = 22490$ Hz.\\
-Wariant A3: $f_0 = 220$ Hz, $f_s = 44100$ Hz  $\rightarrow$ $f_d = 44320$ Hz.\\
-
-\subsection{Zjawisko aliasingu w pasmach częstotliwościowych}
-Cel: udowodnienie zjawiska aliasingu (tożsamości próbek), które występuje w sytuacji, gdy naruszone zostaje twierdzenie Nyquista-Shannona. Zbadano wariant A1, dla którego częstotliwość próbkowania $f_s = 1000$ Hz, częstotliwość sygnału bazowego $f_0 = 100$ Hz, a wyznaczona częstotliwość aliasująca $f_d = f_0 + 1 \cdot f_s = 1100$ Hz.
+Warianty testowe:
+\begin{itemize}
+    \item A1: $f_0 = 100$ Hz, $f_s = 1000$ Hz $\rightarrow$ $f_d = 1100$ Hz.
+    \item A2: $f_0 = 440$ Hz, $f_s = 22050$ Hz $\rightarrow$ $f_d = 22490$ Hz.
+    \item A3: $f_0 = 220$ Hz, $f_s = 44100$ Hz $\rightarrow$ $f_d = 44320$ Hz.
+\end{itemize}
 
 Eksperyment podzielono na dwa etapy. W obu przypadkach do konwersji użyto tej samej częstotliwości próbkowania ($f_s = 1000$ Hz) oraz metody rekonstrukcji opartej na funkcji Sinc. Użyto 16-bitowej kwantyzacji, aby wyeliminować wpływ błędu (szumu) kwantyzacji na badane zjawisko.
 
@@ -381,14 +381,13 @@ W pierwszym kroku wygenerowano i poddano konwersji sygnał o częstotliwości 10
     \label{tab:parametry_aliasing_100Hz}
 \end{table}
 
-% \begin{figure}[H]
-%     \centering
-%     % UWAGA: Wygeneruj wykresy w programie i podmień nazwy plików
-%     \includegraphics[width=0.48\linewidth]{exp3/sygnal_100hz_org.png}
-%     \includegraphics[width=0.48\linewidth]{exp3/sygnal_100hz_rek.png}
-%     \caption{Po lewej: Oryginalny sygnał ciągły 100 Hz. Po prawej: Zrekonstruowany sygnał (próbkowanie 1000 Hz).}
-%     \label{fig:wykresy_aliasing_100Hz}
-% \end{figure}
+ \begin{figure}[H]
+     \centering
+     % UWAGA: Wygeneruj wykresy w programie i podmień nazwy plików
+     \includegraphics[width=0.85\linewidth]{exp3/sygnal_100hz_org.png}
+     \caption{Oryginalny sygnał ciągły 100 Hz, oraz zrekonstruowany sygnał (próbkowanie 1000 Hz).}
+     \label{fig:wykresy_aliasing_100Hz}
+ \end{figure}
 
 \textit{Zanotowane miary błędów dla Etapu 1: MSE: ~0.0000, SNR: bardzo wysokie (powyżej 50 dB). Sygnał został odtworzony poprawnie.}
 
@@ -415,14 +414,13 @@ W drugim kroku wygenerowano sygnał o częstotliwości 1100 Hz. Zgodnie z twierd
     \label{tab:parametry_aliasing_1100Hz}
 \end{table}
 
-% \begin{figure}[H]
-%     \centering
-%     % UWAGA: Wygeneruj wykresy w programie i podmień nazwy plików
-%     \includegraphics[width=0.48\linewidth]{exp3/sygnal_1100hz_org.png}
-%     \includegraphics[width=0.48\linewidth]{exp3/sygnal_1100hz_rek.png}
-%     \caption{Po lewej: Oryginalny sygnał ciągły 1100 Hz. Po prawej: Zrekonstruowany sygnał (próbkowanie 1000 Hz).}
-%     \label{fig:wykresy_aliasing_1100Hz}
-% \end{figure}
+ \begin{figure}[H]
+     \centering
+     % UWAGA: Wygeneruj wykresy w programie i podmień nazwy plików
+     \includegraphics[width=0.85\linewidth]{exp3/sygnal_1100hz_org.png}
+     \caption{Oryginalny sygnał ciągły 1100 Hz, oraz zrekonstruowany sygnał (próbkowanie 1000 Hz).}
+     \label{fig:wykresy_aliasing_1100Hz}
+ \end{figure}
 
 \textit{Zanotowane miary błędów dla Etapu 2: Błąd MSE dla tego etapu przyjął wartość bardzo wysoką (np. > 0.5), a parametr SNR spadł poniżej zera (wskazując całkowitą degradację).}
 
@@ -484,7 +482,27 @@ Podzielono wartości sygnału sinusoidalnego przez wartości szumu gaussowskiego
 \end{table}
 
 \section{Wnioski}
+
+\subsection*{Podsumowanie eksperymentów}
 Implementacja algorytmów obliczeniowych potwierdziła, że parametry takie jak wartość skuteczna i moc średnia są niezbędne dla energetycznej oceny sygnału \cite{1}. Zastosowanie wymogu obliczeń dla pełnych okresów sygnałów periodycznych znacząco redukuje błędy estymacji wartości średniej i wariancji. Aplikacja poprawnie obsługuje eksport danych do formatu binarnego, co pozwala na dalszą obróbkę sygnałów w kolejnych etapach laboratorium \cite{1}.
+
+\subsection*{Wnioski szczegółowe z eksperymentów}
+
+\subsubsection*{1. Znaczenie częstotliwości próbkowania}
+Eksperymenty 1 i 2 dowiodły, że częstotliwość próbkowania jest kluczowym parametrem determinującym jakość rekonstrukcji sygnału. Przy próbkowaniu poniżej granicy Nyquista ($f_s < 2 f_{max}$) metoda ZOH wprowadza znaczne zniekształcenia (MSE = 0.3618 dla 40 Hz). Zastosowanie rekonstrukcji opartej na funkcji Sinc drastycznie poprawia wyniki nawet przy niskiej częstotliwości próbkowania (MSE = 0.0011 dla tej samej konfiguracji). Zarówno metoda ZOH, jak i Sinc wymagają jednak wystarczająco wysokiej próbkowania — algorytm ZOH potrzebuje znacznego nadpróbkowania, a metoda Sinc pozostaje efektywna przy rozumnych okienkach (szerokość okna 20 vs 200 nie daje istotnej poprawy).
+
+\subsubsection*{2. Znaczenie aliasingu}
+Eksperyment 3 zademonstrował fundamentalne ograniczenie cyfrowego przetwarzania sygnałów — zjawisko aliasingu. Przy próbkowaniu sygnału 1100 Hz częstotliwością 1000 Hz, zrekonstruowany przebieg jest \textbf{praktycznie identyczny} z sygnałem 100 Hz próbkowanym tą samą częstotliwością. Matematycznie, próbki pobierane co $T_s = 1$ ms trafiają w te same amplitudy dla obu sygnałów, co wynika z periodyczności funkcji sinus. Błąd porównania (MSE >> 0.5, SNR << 0 dB) jest ogromny, ponieważ program porównuje odtworzony (aliasowany) sygnał 100 Hz z oryginalnym sygnałem 1100 Hz. W praktyce urządzenia cyfrowe nie mogą odróżnić oryginału od aliasu — wymagane są zatem filtry antyaliasingowe przed przetwornikiem A/C.
+
+\subsubsection*{3. Znaczenie praktyczne}
+Wszystkie eksperymenty potwierdzają, że projektowanie systemów akwizycji danych wymaga:
+\begin{enumerate}
+    \item Określenia maksymalnej częstotliwości sygnału ($f_{max}$) w aplikacji,
+    \item Wyboru częstotliwości próbkowania $f_s > 2 f_{max}$ (reguła Nyquista),
+    \item Stosowania filtrów dolnoprzepustowych przed A/C w celu eliminacji składowych powyżej $f_{max}$,
+    \item Wybrania odpowiedniej metody rekonstrukcji sygnału w zależności od dostępnych zasobów obliczeniowych (ZOH dla szybkich operacji, Sinc dla wyższej jakości).
+\end{enumerate}
+Zaniedbanie któregokolwiek z tych warunków prowadzi do utraty informacji i niemożliwości wiernego odtworzenia oryginalnego przebiegu.
 
 
 \begin{thebibliography}{1}
