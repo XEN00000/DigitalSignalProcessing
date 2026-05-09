@@ -13,6 +13,7 @@ from core.Converters import Converters
 from core.FileHandler import FileHandler
 from core.Calculator import Calculator
 from core.Signal import Signal
+from core.Filter import Filter
 from generators.NoiseGenerators import GaussianNoiseGenerator, UniformNoiseGenerator
 from generators.SignalGenerators import (FullWaveSineGenerator, HalfWaveSineGenerator,
                                          ImpulseNoiseGenerator, RectangularGenerator,
@@ -29,6 +30,8 @@ class SignalApp(QMainWindow):
 
         self.current_signal_time = np.array([])
         self.current_signal_values = np.array([])
+        self.reconstructed_signal = None
+        self.plot_mode = "standard"
 
         self.signal_history = []  # historia sygnałów
 
@@ -152,7 +155,8 @@ class SignalApp(QMainWindow):
 
         self.cb_operation = QComboBox()
         self.cb_operation.addItems(
-            ["Dodawanie", "Odejmowanie", "Mnożenie", "Dzielenie"])
+            ["Dodawanie", "Odejmowanie", "Mnożenie", "Dzielenie",
+             "Splot", "Korelacja (bezpośrednia)", "Korelacja (przez splot)"])
         layout_operations.addWidget(self.cb_operation)
 
         self.cb_sig1 = QComboBox()
@@ -205,6 +209,45 @@ class SignalApp(QMainWindow):
         self.lbl_errors = QLabel("MSE: -\nSNR: -\nPSNR: -\nMD: -\nENOB: -")
         layout_errors.addWidget(self.lbl_errors)
         self.middle_layout.addWidget(gb_errors)
+
+        gb_task3 = QGroupBox("Filtracja FIR")
+        layout_task3 = QVBoxLayout(gb_task3)
+
+        layout_task3.addWidget(QLabel("Typ filtru:"))
+        self.cb_fir_type = QComboBox()
+        self.cb_fir_type.addItems(
+            ["Dolnoprzepustowy", "Pasmowoprzepustowy (F1)"])
+        layout_task3.addWidget(self.cb_fir_type)
+
+        layout_task3.addWidget(QLabel("Typ okna:"))
+        self.cb_fir_window = QComboBox()
+        self.cb_fir_window.addItems(
+            ["Hanning", "Prostokątne", "Hamming", "Blackman"])
+        self.cb_fir_window.setCurrentText("Hanning")
+        layout_task3.addWidget(self.cb_fir_window)
+
+        layout_task3.addWidget(
+            QLabel("Liczba współczynników filtru (nieparzysta):"))
+        self.entry_fir_taps = QLineEdit("51")
+        layout_task3.addWidget(self.entry_fir_taps)
+
+        layout_task3.addWidget(QLabel("Częstotliwość odcięcia LP [Hz]:"))
+        self.entry_fir_cutoff = QLineEdit("15.0")
+        layout_task3.addWidget(self.entry_fir_cutoff)
+
+        layout_task3.addWidget(QLabel("Pasmo F1: dolna częstotliwość [Hz]:"))
+        self.entry_fir_low = QLineEdit("8.0")
+        layout_task3.addWidget(self.entry_fir_low)
+
+        layout_task3.addWidget(QLabel("Pasmo F1: górna częstotliwość [Hz]:"))
+        self.entry_fir_high = QLineEdit("18.0")
+        layout_task3.addWidget(self.entry_fir_high)
+
+        btn_apply_filter = QPushButton("Zastosuj filtr FIR")
+        btn_apply_filter.clicked.connect(self.apply_fir_filter)
+        layout_task3.addWidget(btn_apply_filter)
+
+        self.middle_layout.addWidget(gb_task3)
 
     def update_param_fields(self):
         """Dynamicznie buduje pola wprowadzania danych w zależności od wybranego sygnału."""
@@ -262,6 +305,11 @@ class SignalApp(QMainWindow):
 
         self.canvas = FigureCanvas(self.figure)
         self.right_layout.addWidget(self.canvas)
+
+    def _reset_analysis_state(self):
+        self.reconstructed_signal = None
+        self.plot_mode = "standard"
+        self.lbl_errors.setText("MSE: -\nSNR: -\nPSNR: -\nMD: -\nENOB: -")
 
     def generate_and_plot(self):
         """Metoda wywoływana po kliknięciu 'Generuj'. Łączy GUI z logiką generatorów."""
@@ -354,11 +402,7 @@ class SignalApp(QMainWindow):
             self.current_signal_time = t
             self.current_signal_values = y
 
-            # reset po konwersji
-            self.reconstructed_signal = None
-            if hasattr(self, 'lbl_errors'):
-                self.lbl_errors.setText(
-                    "MSE: -\nSNR: -\nPSNR: -\nMD: -\nENOB: -")
+            self._reset_analysis_state()
 
             self.calculate_parameters()
             self.update_plots()
@@ -398,8 +442,11 @@ class SignalApp(QMainWindow):
 
         self.ax_signal.clear()
         is_discrete = getattr(self.current_signal, 'is_discrete', False)
-
         signal_type = self.cb_signal_type.currentText()
+        plot_title = getattr(
+            self.current_signal, 'plot_title', "Wykres amplitudy od czasu")
+        plot_xlabel = getattr(self.current_signal, 'plot_xlabel', "Czas [s]")
+        plot_ylabel = getattr(self.current_signal, 'plot_ylabel', "Amplituda")
 
         if is_discrete:
             if signal_type == "Impuls jednostkowy" or signal_type == "Szum Impulsowy":
@@ -435,14 +482,16 @@ class SignalApp(QMainWindow):
             )
             self.ax_signal.legend()
 
-        self.ax_signal.set_title("Wykres amplitudy od czasu")
-        self.ax_signal.set_xlabel("Czas [s]")
-        self.ax_signal.set_ylabel("Amplituda")
+        self.ax_signal.set_title(plot_title)
+        self.ax_signal.set_xlabel(plot_xlabel)
+        self.ax_signal.set_ylabel(plot_ylabel)
         self.ax_signal.grid(True)
 
         # co rysować na dolnym wykresie
         if hasattr(self, 'reconstructed_signal') and self.reconstructed_signal is not None:
             self.update_error_plot()
+        elif self.plot_mode == "correlation":
+            self.update_correlation_plot()
         else:
             self.update_histogram()
 
@@ -493,6 +542,21 @@ class SignalApp(QMainWindow):
         self.figure.tight_layout(pad=3.0)
         self.canvas.draw()
 
+    def update_correlation_plot(self):
+        if not hasattr(self, 'current_signal') or self.current_signal is None:
+            return
+
+        self.ax_hist.clear()
+        self.ax_hist.plot(self.current_signal.time_axis,
+                          self.current_signal.amplitudes, color='orange')
+        self.ax_hist.set_title("Wykres korelacji")
+        self.ax_hist.set_xlabel("Przesunięcie [s]")
+        self.ax_hist.set_ylabel("Wartość korelacji")
+        self.ax_hist.grid(True)
+
+        self.figure.tight_layout(pad=3.0)
+        self.canvas.draw()
+
     def add_to_history(self, signal, name):
         # zapisujemy nazwe sygnału
         signal.name = name
@@ -529,6 +593,7 @@ class SignalApp(QMainWindow):
                 self.current_signal = FileHandler.load_from_binary(filepath)
                 self.current_signal_time = self.current_signal.time_axis
                 self.current_signal_values = self.current_signal.amplitudes
+                self._reset_analysis_state()
 
                 self.calculate_parameters()
                 self.update_plots()
@@ -610,20 +675,34 @@ class SignalApp(QMainWindow):
                 result_signal = s1 * s2
             elif operation == "Dzielenie":
                 result_signal = s1 / s2
+            elif operation == "Splot":
+                result_signal = Filter.convolve_signals(s1, s2)
+            elif operation == "Korelacja (bezpośrednia)":
+                result_signal = Filter.cross_correlation_direct(s1, s2)
+            elif operation == "Korelacja (przez splot)":
+                result_signal = Filter.cross_correlation_via_convolution(
+                    s1, s2)
             else:
                 return
 
+            self._reset_analysis_state()
             self.current_signal = result_signal
             self.current_signal_time = self.current_signal.time_axis
             self.current_signal_values = self.current_signal.amplitudes
+            if operation in ["Korelacja (bezpośrednia)", "Korelacja (przez splot)"]:
+                self.plot_mode = "correlation"
 
             self.calculate_parameters()
             self.update_plots()
 
-            op_symbol = {"Dodawanie": "+", "Odejmowanie": "-",
-                         "Mnożenie": "*", "Dzielenie": "/"}[operation]
-            # res_name = f"[{len(self.signal_history)+1}] Wynik: ({name1}) {op_symbol} ({name2})"
-            res_name = f"({name1}) {op_symbol} ({name2})"
+            op_symbol_map = {"Dodawanie": "+", "Odejmowanie": "-",
+                             "Mnożenie": "*", "Dzielenie": "/"}
+            if operation in op_symbol_map:
+                res_name = f"({name1}) {op_symbol_map[operation]} ({name2})"
+            elif operation == "Splot":
+                res_name = f"Splot({name1}, {name2})"
+            else:
+                res_name = f"Korelacja({name1}, {name2})"
             self.add_to_history(result_signal, res_name)
 
             QMessageBox.information(
@@ -636,6 +715,55 @@ class SignalApp(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Błąd niespodziewany",
                                  f"Wystąpił problem:\n{e}")
+
+    def apply_fir_filter(self):
+        if not hasattr(self, 'current_signal') or self.current_signal is None:
+            QMessageBox.warning(
+                self, "Błąd", "Brak sygnału do filtracji. Wygeneruj lub wczytaj sygnał.")
+            return
+
+        try:
+            filter_type = self.cb_fir_type.currentText()
+            window_type = self.cb_fir_window.currentText()
+            taps = int(self.entry_fir_taps.text())
+
+            if filter_type == "Dolnoprzepustowy":
+                cutoff = float(self.entry_fir_cutoff.text())
+                fir = Filter.design_lowpass_fir(
+                    sampling_freq=self.current_signal.f,
+                    cutoff_freq=cutoff,
+                    num_taps=taps,
+                    window_type=window_type
+                )
+            else:
+                low = float(self.entry_fir_low.text())
+                high = float(self.entry_fir_high.text())
+                fir = Filter.design_bandpass_fir(
+                    sampling_freq=self.current_signal.f,
+                    low_cutoff=low,
+                    high_cutoff=high,
+                    num_taps=taps,
+                    window_type=window_type
+                )
+
+            filtered_signal = Filter.filter_signal(self.current_signal, fir)
+            self._reset_analysis_state()
+            self.current_signal = filtered_signal
+            self.current_signal_time = filtered_signal.time_axis
+            self.current_signal_values = filtered_signal.amplitudes
+
+            self.calculate_parameters()
+            self.update_plots()
+
+            filter_label = "LP" if filter_type == "Dolnoprzepustowy" else "BP F1"
+            hist_name = f"[{len(self.signal_history)+1}] Filtr FIR {filter_label} ({window_type})"
+            self.add_to_history(filtered_signal, hist_name)
+        except ValueError as e:
+            QMessageBox.critical(
+                self, "Błąd parametrów filtru", f"Niepoprawne parametry filtracji:\n{e}")
+        except Exception as e:
+            QMessageBox.critical(
+                self, "Błąd filtracji", f"Wystąpił błąd podczas filtracji:\n{e}")
 
     def perform_conversion(self):
         """Przeprowadza proces S1 -> Q1 -> R1/R3 i liczy miary błędów."""
@@ -670,6 +798,7 @@ class SignalApp(QMainWindow):
                     quantized_signal, original_signal.f, sinc_window)
 
             self.reconstructed_signal = reconstructed_signal
+            self.plot_mode = "standard"
 
             # miary błędów (C1-C4)
             mse_val = Calculator.mse(original_signal, reconstructed_signal)

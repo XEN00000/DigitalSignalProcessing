@@ -1,0 +1,2 @@
+o2 f1
+rysujemy też wykres korelacji
