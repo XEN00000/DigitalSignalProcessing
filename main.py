@@ -3,8 +3,11 @@ import numpy as np
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                                QHBoxLayout, QGroupBox, QLabel, QComboBox,
                                QLineEdit, QPushButton, QSlider, QMessageBox,
-                               QFileDialog, QFormLayout, QTextEdit, QDialog)
+                               QFileDialog, QFormLayout, QTextEdit, QDialog,
+                               QTabWidget)
 from PySide6.QtCore import Qt
+
+from core.DistanceSimulatorWindow import DistanceSimulatorWindow
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
@@ -827,8 +830,34 @@ class SignalApp(QMainWindow):
                                  f"Wystąpił błąd:\n{e}")
 
 
+class MainWindow(QMainWindow):
+    """Główne okno z zakładkami łączące istniejący analizator i nowy symulator odległości."""
+
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Cyfrowe Przetwarzanie Sygnałów")
+        self.resize(1600, 900)
+
+        tabs = QTabWidget()
+        tabs.setTabPosition(QTabWidget.North)
+        tabs.setDocumentMode(True)
+
+        # Zakładka 1 – istniejący Generator i Analizator
+        signal_app = SignalApp()
+        # SignalApp jest QMainWindow; wyciągamy centralny widget
+        signal_widget = signal_app.centralWidget()
+        signal_app.setCentralWidget(QWidget())  # odepnij od starego okna
+        tabs.addTab(signal_widget, "🔊  Generator i Analizator Sygnałów")
+
+        # Zakładka 2 – Symulator odległości (korelacja)
+        dist_sim = DistanceSimulatorWindow()
+        tabs.addTab(dist_sim, "📡  Wyznaczanie Opóźnienia (Korelacja)")
+
+        self.setCentralWidget(tabs)
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = SignalApp()
+    window = MainWindow()
     window.show()
     sys.exit(app.exec())
