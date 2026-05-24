@@ -28,8 +28,8 @@ from generators.SignalGenerators import (FullWaveSineGenerator, HalfWaveSineGene
 class SignalApp(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Generator i Analizator Sygnałów")
-        self.resize(1500, 850)
+        self.setWindowTitle("Cyfrowe Przetwarzanie Sygnałów")
+        self.resize(1600, 900)
 
         self.current_signal_time = np.array([])
         self.current_signal_values = np.array([])
@@ -38,10 +38,18 @@ class SignalApp(QMainWindow):
 
         self.signal_history = []  # historia sygnałów
 
-        # Centralny widget
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        self.main_layout = QHBoxLayout(central_widget)
+        # QTabWidget jako główny widget
+        self._tabs = QTabWidget()
+        self.setCentralWidget(self._tabs)
+
+        # Zakładka 1 – Generator i Analizator
+        signal_tab = QWidget()
+        self.main_layout = QHBoxLayout(signal_tab)
+        self._tabs.addTab(signal_tab, "Generator i Analizator Sygnałów")
+
+        # Zakładka 2 – Symulator odległości (korelacja)
+        dist_sim = DistanceSimulatorWindow()
+        self._tabs.addTab(dist_sim, "Wyznaczanie Opóźnienia (Korelacja)")
 
         self.create_widgets()
 
@@ -830,34 +838,8 @@ class SignalApp(QMainWindow):
                                  f"Wystąpił błąd:\n{e}")
 
 
-class MainWindow(QMainWindow):
-    """Główne okno z zakładkami łączące istniejący analizator i nowy symulator odległości."""
-
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Cyfrowe Przetwarzanie Sygnałów")
-        self.resize(1600, 900)
-
-        tabs = QTabWidget()
-        tabs.setTabPosition(QTabWidget.North)
-        tabs.setDocumentMode(True)
-
-        # Zakładka 1 – istniejący Generator i Analizator
-        signal_app = SignalApp()
-        # SignalApp jest QMainWindow; wyciągamy centralny widget
-        signal_widget = signal_app.centralWidget()
-        signal_app.setCentralWidget(QWidget())  # odepnij od starego okna
-        tabs.addTab(signal_widget, "🔊  Generator i Analizator Sygnałów")
-
-        # Zakładka 2 – Symulator odległości (korelacja)
-        dist_sim = DistanceSimulatorWindow()
-        tabs.addTab(dist_sim, "📡  Wyznaczanie Opóźnienia (Korelacja)")
-
-        self.setCentralWidget(tabs)
-
-
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = MainWindow()
+    window = SignalApp()
     window.show()
     sys.exit(app.exec())
