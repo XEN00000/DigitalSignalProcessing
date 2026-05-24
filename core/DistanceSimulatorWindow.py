@@ -27,7 +27,7 @@ from core.DistanceSimulator import DistanceSimulator, SimulationResult
 # ---------------------------------------------------------------------------
 class SimulationWorker(QThread):
     finished = QtSignal(object)
-    error    = QtSignal(str)
+    error = QtSignal(str)
 
     def __init__(self, params: dict):
         super().__init__()
@@ -94,14 +94,15 @@ class DistanceSimulatorWindow(QWidget):
         # ---- panel prawy (wykresy) ----
         self._figure = Figure(figsize=(12, 9), dpi=95)
         self._canvas = FigureCanvas(self._figure)
-        self._canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self._canvas.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Expanding)
         main_layout.addWidget(self._canvas, stretch=1)
 
         self._init_plots()
 
     # ------------------------------------------------------------------
     def _build_params_group(self) -> QGroupBox:
-        gb   = QGroupBox("Parametry eksperymentu")
+        gb = QGroupBox("Parametry eksperymentu")
         form = QFormLayout(gb)
         self._e = {}
 
@@ -123,7 +124,7 @@ class DistanceSimulatorWindow(QWidget):
         return gb
 
     def _build_probe_group(self) -> QGroupBox:
-        gb   = QGroupBox("Sygnał sondujący s[n]")
+        gb = QGroupBox("Sygnał sondujący s[n]")
         form = QFormLayout(gb)
 
         self._cb_probe_type = QComboBox()
@@ -134,19 +135,20 @@ class DistanceSimulatorWindow(QWidget):
             "rectangular (prostokątny)",
         ])
         form.addRow("Typ:", self._cb_probe_type)
-        self._cb_probe_type.currentIndexChanged.connect(self._on_probe_type_changed)
+        self._cb_probe_type.currentIndexChanged.connect(
+            self._on_probe_type_changed)
 
         le_dur = QLineEdit(self._DEFAULTS["probe_duration"])
         form.addRow("Czas trwania [s]:", le_dur)
         self._e["probe_duration"] = le_dur
 
-        self._lbl_freq    = QLabel("Częstotliwość startowa [Hz]:")
-        self._le_freq     = QLineEdit(self._DEFAULTS["probe_freq"])
+        self._lbl_freq = QLabel("Częstotliwość startowa [Hz]:")
+        self._le_freq = QLineEdit(self._DEFAULTS["probe_freq"])
         form.addRow(self._lbl_freq, self._le_freq)
         self._e["probe_freq"] = self._le_freq
 
         self._lbl_freq_end = QLabel("Częstotliwość końcowa [Hz]:")
-        self._le_freq_end  = QLineEdit(self._DEFAULTS["probe_freq_end"])
+        self._le_freq_end = QLineEdit(self._DEFAULTS["probe_freq_end"])
         form.addRow(self._lbl_freq_end, self._le_freq_end)
         self._e["probe_freq_end"] = self._le_freq_end
 
@@ -157,13 +159,13 @@ class DistanceSimulatorWindow(QWidget):
         return gb
 
     def _build_method_group(self) -> QGroupBox:
-        gb   = QGroupBox("Metoda obliczenia korelacji wzajemnej")
+        gb = QGroupBox("Metoda obliczenia korelacji wzajemnej")
         form = QFormLayout(gb)
 
         self._cb_method = QComboBox()
         self._cb_method.addItems([
-            "Korelacja przez splot  R_ys = splot(y, s_rev)",
-            "Korelacja bezpośrednia  R_ys[k] = Σ y[n]·s[n-k]",
+            "Korelacja przez splot",
+            "Korelacja bezpośrednia",
         ])
         form.addRow("Metoda:", self._cb_method)
 
@@ -184,7 +186,7 @@ class DistanceSimulatorWindow(QWidget):
         return btn
 
     def _build_results_group(self) -> QGroupBox:
-        gb   = QGroupBox("Wyniki pomiaru")
+        gb = QGroupBox("Wyniki pomiaru")
         vbox = QVBoxLayout(gb)
         self._lbl_results = QLabel(
             "Zmierzone opóźnienie:     –\n"
@@ -201,7 +203,7 @@ class DistanceSimulatorWindow(QWidget):
         return gb
 
     def _build_log_group(self) -> QGroupBox:
-        gb   = QGroupBox("Dziennik")
+        gb = QGroupBox("Dziennik")
         vbox = QVBoxLayout(gb)
         self._log = QTextEdit()
         self._log.setReadOnly(True)
@@ -218,10 +220,10 @@ class DistanceSimulatorWindow(QWidget):
         gs = GridSpec(3, 2, figure=self._figure,
                       height_ratios=[1, 1, 1.4])
 
-        self._ax_sent      = self._figure.add_subplot(gs[0, 0])
-        self._ax_received  = self._figure.add_subplot(gs[0, 1])
-        self._ax_probe     = self._figure.add_subplot(gs[1, 0])
-        self._ax_corr      = self._figure.add_subplot(gs[1, 1])
+        self._ax_sent = self._figure.add_subplot(gs[0, 0])
+        self._ax_received = self._figure.add_subplot(gs[0, 1])
+        self._ax_probe = self._figure.add_subplot(gs[1, 0])
+        self._ax_corr = self._figure.add_subplot(gs[1, 1])
         self._ax_corr_zoom = self._figure.add_subplot(gs[2, :])
 
         self._figure.subplots_adjust(
@@ -244,7 +246,7 @@ class DistanceSimulatorWindow(QWidget):
     def _on_probe_type_changed(self):
         sig_key = self._cb_probe_type.currentText().split()[0]
         has_chirp = (sig_key == "chirp")
-        has_freq  = sig_key not in ("gaussian_pulse", "rectangular")
+        has_freq = sig_key not in ("gaussian_pulse", "rectangular")
         self._lbl_freq_end.setVisible(has_chirp)
         self._le_freq_end.setVisible(has_chirp)
         self._lbl_freq.setVisible(has_freq)
@@ -254,13 +256,11 @@ class DistanceSimulatorWindow(QWidget):
         idx = self._cb_method.currentIndex()
         if idx == 0:
             self._lbl_method_info.setText(
-                "R_ys[k] = splot(y, s_odwrócone) — "
-                "korelacja wyrażona przez splot z odwróconym wzorcem."
+                ""
             )
         else:
             self._lbl_method_info.setText(
-                "R_ys[k] = Σ_n y[n]·s[n−k] — "
-                "implementacja bezpośrednia wg wzoru (9)."
+                ""
             )
 
     def _selected_method(self) -> str:
@@ -274,19 +274,21 @@ class DistanceSimulatorWindow(QWidget):
     # ------------------------------------------------------------------
     def _run_simulation(self):
         try:
-            fs       = float(self._e["fs"].text())
-            speed    = float(self._e["speed"].text())
+            fs = float(self._e["fs"].text())
+            speed = float(self._e["speed"].text())
             distance = float(self._e["distance"].text())
             duration = float(self._e["probe_duration"].text())
-            freq     = float(self._le_freq.text()) if self._le_freq.isVisible() else 1000.0
-            freq_end = float(self._le_freq_end.text()) if self._le_freq_end.isVisible() else freq
-            noise    = float(self._e["noise_level"].text())
+            freq = float(self._le_freq.text()
+                         ) if self._le_freq.isVisible() else 1000.0
+            freq_end = float(self._le_freq_end.text()
+                             ) if self._le_freq_end.isVisible() else freq
+            noise = float(self._e["noise_level"].text())
         except ValueError:
             self._log_msg("[BŁĄD] Nieprawidłowe wartości parametrów.")
             return
 
         sig_type = self._cb_probe_type.currentText().split()[0]
-        method   = self._selected_method()
+        method = self._selected_method()
 
         params = dict(
             fs=fs, speed=speed, distance=distance,
@@ -341,12 +343,14 @@ class DistanceSimulatorWindow(QWidget):
     # Rysowanie wykresów
     # ------------------------------------------------------------------
     def _draw_plots(self, r: SimulationResult):
-        display_s = min(len(r.t_axis), int(r.fs * (r.signal_duration + r.expected_delay + 0.05)))
+        display_s = min(len(r.t_axis), int(
+            r.fs * (r.signal_duration + r.expected_delay + 0.05)))
 
         # ---- Sygnał wysłany ----
         ax = self._ax_sent
         ax.clear()
-        ax.plot(r.t_axis[:display_s], r.sent_signal[:display_s], color='blue', lw=0.9)
+        ax.plot(r.t_axis[:display_s],
+                r.sent_signal[:display_s], color='blue', lw=0.9)
         ax.set_title("Sygnał wysłany x(t)")
         ax.set_xlabel("Czas [s]")
         ax.set_ylabel("Amplituda")
@@ -355,7 +359,8 @@ class DistanceSimulatorWindow(QWidget):
         # ---- Sygnał odebrany ----
         ax = self._ax_received
         ax.clear()
-        ax.plot(r.t_axis[:display_s], r.received_signal[:display_s], color='red', lw=0.9)
+        ax.plot(r.t_axis[:display_s],
+                r.received_signal[:display_s], color='red', lw=0.9)
         ax.axvline(r.expected_delay, color='green', lw=1.0, ls='--',
                    label=f"Δt_oczek = {r.expected_delay:.4f} s")
         ax.legend(fontsize=7)
@@ -368,7 +373,8 @@ class DistanceSimulatorWindow(QWidget):
         ax = self._ax_probe
         ax.clear()
         ax.plot(r.probe_t, r.probe, color='green', lw=0.9)
-        ax.set_title(f"Sygnał sondujący s[n]  (typ: {r.signal_type},  M={len(r.probe)} próbek)")
+        ax.set_title(
+            f"Sygnał sondujący s[n]  (typ: {r.signal_type},  M={len(r.probe)} próbek)")
         ax.set_xlabel("Czas [s]")
         ax.set_ylabel("Amplituda")
         ax.grid(True)
@@ -376,16 +382,17 @@ class DistanceSimulatorWindow(QWidget):
         # ---- Korelacja wzajemna R_ys (lagi ≥ 0) ----
         ax = self._ax_corr
         ax.clear()
-        nonneg   = r.lags_samples >= 0
-        t_pos    = r.lags_time[nonneg]
-        c_pos    = r.correlation[nonneg]
-        disp_c   = min(len(t_pos), int(r.fs * (r.expected_delay * 1.5 + 0.05)))
+        nonneg = r.lags_samples >= 0
+        t_pos = r.lags_time[nonneg]
+        c_pos = r.correlation[nonneg]
+        disp_c = min(len(t_pos), int(r.fs * (r.expected_delay * 1.5 + 0.05)))
         ax.plot(t_pos[:disp_c], c_pos[:disp_c], color='orange', lw=0.9)
         ax.axvline(r.peak_lag_time, color='purple', lw=1.2, ls='--',
                    label=f"max @ k={r.peak_lag_samples}")
         ax.legend(fontsize=7)
         method_lbl = "przez splot" if r.method == "via_convolution" else "bezpośrednia"
-        ax.set_title(f"Korelacja wzajemna R_ys[k]  (metoda: {method_lbl},  lagi ≥ 0)")
+        ax.set_title(
+            f"Korelacja wzajemna R_ys[k]  (metoda: {method_lbl},  lagi ≥ 0)")
         ax.set_xlabel("Lag τ [s]")
         ax.set_ylabel("R_ys(τ)")
         ax.grid(True)
@@ -393,7 +400,7 @@ class DistanceSimulatorWindow(QWidget):
         # ---- Korelacja – zoom wokół maksimum ----
         ax = self._ax_corr_zoom
         ax.clear()
-        peak_t   = r.peak_lag_time
+        peak_t = r.peak_lag_time
         half_win = max(r.expected_delay * 0.12, 8 / r.fs)
         lo = max(peak_t - half_win, 0.0)
         hi = peak_t + half_win
@@ -417,7 +424,8 @@ class DistanceSimulatorWindow(QWidget):
                 xy=(r.peak_lag_time, peak_val),
                 xytext=(r.peak_lag_time + half_win * 0.35, peak_val * 0.72),
                 fontsize=8,
-                bbox=dict(boxstyle="round,pad=0.4", fc="lightyellow", alpha=0.9, ec="gray"),
+                bbox=dict(boxstyle="round,pad=0.4",
+                          fc="lightyellow", alpha=0.9, ec="gray"),
                 arrowprops=dict(arrowstyle="->", color="black", lw=1.0),
             )
 
