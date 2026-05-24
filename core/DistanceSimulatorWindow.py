@@ -73,7 +73,7 @@ class DistanceSimulatorWindow(QWidget):
         # ---- panel lewy ----
         left_scroll = QScrollArea()
         left_scroll.setWidgetResizable(True)
-        left_scroll.setFixedWidth(330)
+        left_scroll.setFixedWidth(420)
         left_scroll.setFrameShape(QFrame.NoFrame)
 
         left_container = QWidget()
@@ -92,7 +92,7 @@ class DistanceSimulatorWindow(QWidget):
         main_layout.addWidget(left_scroll)
 
         # ---- panel prawy (wykresy) ----
-        self._figure = Figure(figsize=(11, 9), dpi=95, constrained_layout=True)
+        self._figure = Figure(figsize=(12, 9), dpi=95)
         self._canvas = FigureCanvas(self._figure)
         self._canvas.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         main_layout.addWidget(self._canvas, stretch=1)
@@ -216,14 +216,18 @@ class DistanceSimulatorWindow(QWidget):
     def _init_plots(self):
         self._figure.clear()
         gs = GridSpec(3, 2, figure=self._figure,
-                      hspace=0.55, wspace=0.35,
-                      left=0.08, right=0.97, top=0.95, bottom=0.07)
+                      height_ratios=[1, 1, 1.4])
 
         self._ax_sent      = self._figure.add_subplot(gs[0, 0])
         self._ax_received  = self._figure.add_subplot(gs[0, 1])
         self._ax_probe     = self._figure.add_subplot(gs[1, 0])
         self._ax_corr      = self._figure.add_subplot(gs[1, 1])
         self._ax_corr_zoom = self._figure.add_subplot(gs[2, :])
+
+        self._figure.subplots_adjust(
+            left=0.07, right=0.98, top=0.95, bottom=0.07,
+            hspace=0.60, wspace=0.30
+        )
         self._canvas.draw()
 
     # ------------------------------------------------------------------
@@ -426,4 +430,8 @@ class DistanceSimulatorWindow(QWidget):
         ax.set_ylabel("R_ys(τ)")
         ax.grid(True)
 
+        self._figure.subplots_adjust(
+            left=0.07, right=0.98, top=0.95, bottom=0.07,
+            hspace=0.60, wspace=0.30
+        )
         self._canvas.draw()
