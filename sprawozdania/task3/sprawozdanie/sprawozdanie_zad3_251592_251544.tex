@@ -74,9 +74,12 @@ Cel: zbadanie skuteczności tłumienia zakłóceń za pomocą filtru FIR z oknem
         Typ filtru & Środkowoprzepustowy (F1) \\ \hline
         Okienkowanie & Hanning (O2) \\ \hline
         Rząd filtru ($M$) & 63 \\ \hline
+        Cz. dolna ($f_d$) [Hz] & 7 \\ \hline
+        Cz. górna ($f_g$) [Hz] & 13 \\ \hline
+
     \end{tabular}
-    \caption{Parametry dla Eksperymentu 1 (Filtracja FIR)}
-    \label{tab:parametry_filtracja}
+    \caption{Podstawowe parametry dla Eksperymentu 1}
+    \label{tab:podstatowe_parametry_filtracja}
 \end{table}
 
 
@@ -125,19 +128,50 @@ Cel: zbadanie skuteczności tłumienia zakłóceń za pomocą filtru FIR z oknem
     \label{fig:wykres_po_filtracji}
 \end{figure}
 
-% \begin{table}[H]
-%     \centering
-%     \vspace{0.2cm}
-%     \begin{tabular}{|l|c|}
-%         \hline
-%         \textbf{Metryka} & \textbf{Wartość} \\ \hline
-%         Tłumienie sygnału $f_2$ w paśmie zaporowym [dB] & -45.2 \\ \hline
-%         Amplituda sygnału $f_1$ (przepustowe) & 0.98 \\ \hline
-%         Opóźnienie fazowe (próbek) & 31 \\ \hline
-%     \end{tabular}
-%     \caption{Wyniki oceny jakości filtracji}
-%     \label{tab:wyniki_filtracja}
-% \end{table}
+\subsubsection{Zbyt mała szerokość okna}
+
+\begin{table}[H]
+    \centering
+    \vspace{0.2cm}
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Parametr} & \textbf{Wartość} \\ \hline
+        Rząd filtru ($M$) & 11 \\ \hline
+    \end{tabular}
+    \caption{Parametry dla Eksperymentu 1 (Filtracja FIR)}
+    \label{tab:parametry_filtracja_male_M}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{wykresy/sin10_sin2_gauss-probkowanie200/male_M/fir_M11.png}
+    \caption{Sygnał wyjściowy po przefiltrowaniu filtrem środkowoprzepustowym z oknem Hanninga.}
+    \label{fig:wykres_po_filtracji_male_M}
+\end{figure}
+
+
+\subsubsection{Duża szerokość okna}
+
+\begin{table}[H]
+    \centering
+    \vspace{0.2cm}
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Parametr} & \textbf{Wartość} \\ \hline
+        Rząd filtru ($M$) & 111 \\ \hline
+    \end{tabular}
+    \caption{Parametry dla Eksperymentu 1 (Filtracja FIR)}
+    \label{tab:parametry_filtracja_duze_M}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{wykresy/sin10_sin2_gauss-probkowanie200/duze_m/fir_m111.png}
+    \caption{Sygnał wyjściowy po przefiltrowaniu filtrem środkowoprzepustowym z oknem Hanninga.}
+    \label{fig:wykres_po_filtracji_duze_M}
+\end{figure}
+
+
 
 \subsection{Eksperyment nr 2: Wyznaczanie opóźnienia na podstawie korelacji}
 
