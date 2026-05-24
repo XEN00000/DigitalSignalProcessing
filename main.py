@@ -233,7 +233,7 @@ class SignalApp(QMainWindow):
         layout_task3.addWidget(QLabel("Typ okna:"))
         self.cb_fir_window = QComboBox()
         self.cb_fir_window.addItems(
-            ["Hanning", "Prostokątne", "Hamming", "Blackman"])
+            ["Hanning", "Prostokątne"])
         self.cb_fir_window.setCurrentText("Hanning")
         layout_task3.addWidget(self.cb_fir_window)
 

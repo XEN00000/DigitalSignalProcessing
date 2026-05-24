@@ -50,14 +50,14 @@ Korelacja ta ma szerokie zastosowanie m.in. w radarach do pomiaru odległości. 
 
 \section{Instrukcja obsługi aplikacji}
 \begin{enumerate}
-    \item \textbf{Filtracja:} W zakładce filtracji wybierz parametry sygnału testowego (suma sinusoid i szumu). Ustal częstotliwość odcięcia, wybierz typ filtru \textit{Środkowoprzepustowy (F1)} oraz metodę okna \textit{Hanninga (O2)}. Podaj rząd filtru $M$ i kliknij \textit{Filtruj}.
+    \item \textbf{Filtracja:} W zakładce filtracji wybierz parametry sygnału testowego (suma sinusoid i szumu). Ustal częstotliwość odcięcia, wybierz typ filtru \textit{Środkowoprzepustowy} oraz metodę okna \textit{Hanninga}. Podaj rząd filtru $M$ i kliknij \textit{Filtruj}.
     \item \textbf{Korelacja i opóźnienie:} Przejdź do zakładki korelacji. Skonfiguruj sygnał referencyjny oraz w symulatorze ustaw odległość od obiektu. Kliknij \textit{Wyznacz opóźnienie}. Program nałoży na siebie sygnały i zlokalizuje maksimum funkcji korelacji.
     \item Obliczone wyniki (miary błędów, wyznaczone opóźnienie $\Delta t$) pojawią się w oknach tekstowych, a sygnały na dedykowanych wykresach.
 \end{enumerate}
 
-\section{Eksperymenty i wyniki}
+\section{Eksperymenty}
 
-\subsection{Eksperyment nr 1: Filtracja sygnału filtrem środkowoprzepustowym (F1) z oknem Hanninga (O2)}
+\subsection{Eksperyment nr 1: Filtracja sygnału filtrem środkowoprzepustowym z oknem Hanninga}
 
 Cel: zbadanie skuteczności tłumienia zakłóceń za pomocą filtru FIR z oknem Hanninga. Sygnał wejściowy składa się z sumy dwóch tonów oraz szumu, z czego tylko jeden ton leży w paśmie przepustowym.
 
@@ -71,7 +71,7 @@ Cel: zbadanie skuteczności tłumienia zakłóceń za pomocą filtru FIR z oknem
         Cz. składowej użytecznej ($f_1$) [Hz] & 10 \\ \hline
         Cz. składowej zakłócającej ($f_2$) [Hz] & 2 \\ \hline
         Amplituda szumu Gaussa & 0.2 \\ \hline
-        Typ filtru & Środkowoprzepustowy (F1) \\ \hline
+        Typ filtru & Środkowoprzepustowy \\ \hline
         Okienkowanie & Hanning (O2) \\ \hline
         Rząd filtru ($M$) & 63 \\ \hline
         Cz. dolna ($f_d$) [Hz] & 7 \\ \hline
@@ -172,8 +172,106 @@ Cel: zbadanie skuteczności tłumienia zakłóceń za pomocą filtru FIR z oknem
 \end{figure}
 
 
+\subsection{Eksperyment nr 2: Filtracja sygnału filtrem środkowoprzepustowym z oknem prostokątnym}
 
-\subsection{Eksperyment nr 2: Pomiar odległości przy użyciu korelacji}
+
+Cel: zbadanie skuteczności tłumienia zakłóceń za pomocą filtru FIR z oknem prostokątnym. Sygnał wejściowy taki sam jak w eksperymencie 1.
+
+\begin{table}[H]
+    \centering
+    \vspace{0.2cm}
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Parametr} & \textbf{Wartość} \\ \hline
+        Częstotliwość próbkowania ($f_s$) [Hz] & 200 \\ \hline
+        Cz. składowej użytecznej ($f_1$) [Hz] & 10 \\ \hline
+        Cz. składowej zakłócającej ($f_2$) [Hz] & 2 \\ \hline
+        Amplituda szumu Gaussa & 0.2 \\ \hline
+        Typ filtru & Środkowoprzepustowy\\ \hline
+        Okienkowanie & prostokątne \\ \hline
+        Rząd filtru ($M$) & 63 \\ \hline
+        Cz. dolna ($f_d$) [Hz] & 7 \\ \hline
+        Cz. górna ($f_g$) [Hz] & 13 \\ \hline
+
+    \end{tabular}
+    \caption{Podstawowe parametry dla Eksperymentu 1}
+    \label{tab:podstatowe_parametry_filtracja}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{wykresy/prostokatny/m63.png}
+    \caption{Sygnał wyjściowy po przefiltrowaniu filtrem środkowoprzepustowym z oknem prostokątnym.}
+    \label{fig:wykres_po_filtracji_prostokatny}
+\end{figure}
+
+\subsubsection{Zbyt mała szerokość okna}
+
+\begin{table}[H]
+    \centering
+    \vspace{0.2cm}
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Parametr} & \textbf{Wartość} \\ \hline
+        Rząd filtru ($M$) & 11 \\ \hline
+    \end{tabular}
+    \caption{Parametry dla małego okna}
+    \label{tab:parametry_filtracja_male_M_prostokat}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{wykresy/prostokatny/m63.png}
+    \caption{Sygnał wyjściowy po przefiltrowaniu filtrem środkowoprzepustowym z oknem prostokątnym, M=11.}
+    \label{fig:wykres_po_filtracji_male_M_prostokat}
+\end{figure}
+
+\subsubsection{Zbyt średnia szerokość okna}
+
+\begin{table}[H]
+    \centering
+    \vspace{0.2cm}
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Parametr} & \textbf{Wartość} \\ \hline
+        Rząd filtru ($M$) & 33 \\ \hline
+    \end{tabular}
+    \caption{Parametry dla średniego okna}
+    \label{tab:parametry_filtracja_srednie_M_prostokat}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{wykresy/prostokatny/m33.png}
+    \caption{Sygnał wyjściowy po przefiltrowaniu filtrem środkowoprzepustowym z oknem prostokątnym, M=33.}
+    \label{fig:wykres_po_filtracji_srednie_M_prostokat}
+\end{figure}
+
+
+\subsubsection{Duża szerokość okna}
+
+\begin{table}[H]
+    \centering
+    \vspace{0.2cm}
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Parametr} & \textbf{Wartość} \\ \hline
+        Rząd filtru ($M$) & 111 \\ \hline
+    \end{tabular}
+    \caption{Parametry dla dużego okna}
+    \label{tab:parametry_filtracja_duze_M_prostokat}
+\end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\linewidth]{wykresy/prostokatny/m111.png}
+    \caption{Sygnał wyjściowy po przefiltrowaniu filtrem środkowoprzepustowym z oknem prostokątnym.}
+    \label{fig:wykres_po_filtracji_duze_M_prostokat}
+\end{figure}
+
+
+
+\subsection{Eksperyment nr 3: Pomiar odległości przy użyciu korelacji}
 
 Cel: badanie symulatora odległości opartego na poszukiwaniu maksimum splotu/korelacji pomiędzy wysłanym a odebranym (opóźnionym) sygnałem sondującym.
 
@@ -235,7 +333,7 @@ Do sygnału zwrotnego dodano szum gaussowski o amplitudzie równej 80\% amplitud
 \begin{itemize}
     \item \textbf{Wpływ rzędu filtru ($M$) na jakość filtracji:} Eksperyment 1 udowodnił, że skuteczność filtru FIR jest silnie uzależniona od liczby jego współczynników. Dla rzędu $M=11$ filtr charakteryzował się zbyt szerokim pasmem przejściowym, co utrudniało wycięcie zakłócenia o częstotliwości 2 Hz. Zwiększenie rzędu do $M=63$, a ostatecznie do $M=111$,  wyostrzyło charakterystykę częstotliwościową, umożliwiając wyizolowanie pożądanego sygnału 10 Hz spośród szumu i innych składowych.
     \item \textbf{Wysoka odporność korelacji na szum:} Zgodnie z założeniami teoretycznymi, eksperyment 2 potwierdził, że korelacja wzajemna zrealizowana przy pomocy splotu dyskretnego jest dobrym narzędziem do detekcji sygnałów. Mimo dodania do sygnału echa szumu o bardzo dużej amplitudzie (współczynnik 0.8), operacja korelacji skutecznie zredukowała wpływ zakłóceń i uwypukliła pik w miejscu maksymalnego podobieństwa przebiegów, co pozwoliło na zmierzenie opóźnienia.
-    \item \textbf{Źródło błędu w pomiarze korelacyjnym:} Otrzymany w symulacji radaru błąd pomiaru odległości wynoszący zaledwie $0.0108$ m (około 1 cm) jest następstwem próbkowania ciągłego sygnału. Przy częstotliwości próbkowania $f_s = 10000$ Hz, odstęp między próbkami wynosi $0.0001$ s. Przy prędkości fali $V = 343$ m/s narzuca to fizyczną rozdzielczość pomiarową.
+    \item \textbf{Źródło błędu w pomiarze korelacyjnym:} Otrzymany w symulacji radaru błąd pomiaru odległości wynoszący zaledwie $0.0108$ m (około 1 cm) jest następstwem próbkowania ciągłego sygnału. Przy częstotliwości próbkowania $f_s = 10000$ Hz, odstęp między próbkami wynosi $0.0001$ s. Przy prędkości fali $V = 343$ m/s narzuca to pewną rozdzielczość pomiarową.
 \end{itemize}
 
 \begin{thebibliography}{1}
