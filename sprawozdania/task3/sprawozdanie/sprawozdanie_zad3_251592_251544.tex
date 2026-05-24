@@ -173,9 +173,15 @@ Cel: zbadanie skuteczności tłumienia zakłóceń za pomocą filtru FIR z oknem
 
 
 
-\subsection{Eksperyment nr 2: Wyznaczanie opóźnienia na podstawie korelacji}
+\subsection{Eksperyment nr 2: Pomiar odległości przy użyciu korelacji}
 
 Cel: badanie symulatora odległości opartego na poszukiwaniu maksimum splotu/korelacji pomiędzy wysłanym a odebranym (opóźnionym) sygnałem sondującym.
+
+Cel: zbadanie wpływu wybranych parametrów na poprawność mierzenia odległości przy pomocy korelacji sygnałów. 
+
+\subsubsection*{Założenia i parametry eksperymentu}
+Symulowany czujnik działa w powietrzu, gdzie prędkość rozchodzenia się fali wynosi 343 m/s. Śledzony obiekt znajduje się w zadanej, rzeczywistej odległości, co wymusza odpowiednie opóźnienie powracającego sygnału. 
+Do sygnału zwrotnego dodano szum gaussowski o amplitudzie równej 80\% amplitudy sygnału sondującego. Do wyznaczenia funkcji korelacji wykorzystano implementację z użyciem splotu dyskretnego.
 
 \begin{table}[H]
     \centering
@@ -183,46 +189,53 @@ Cel: badanie symulatora odległości opartego na poszukiwaniu maksimum splotu/ko
     \begin{tabular}{|l|c|}
         \hline
         \textbf{Parametr} & \textbf{Wartość} \\ \hline
+        \multicolumn{2}{|c|}{\textit{Parametry środowiskowe}} \\ \hline
+        Prędkość rozchodzenia się sygnału ($V$) [m/s] & 343 \\ \hline
+        Rzeczywista odległość od obiektu ($d$) [m] & 70 \\ \hline
+        Teoretyczne opóźnienie sygnału ($\Delta t$) [s] & 0.408163 \\ \hline
+        
+        \multicolumn{2}{|c|}{\textit{Parametry sygnałów i analizy}} \\ \hline
+        Typ sygnału sondującego & Sinusoidalny \\ \hline
+        Częstotliwość sygnału [Hz] & 50.0 \\ \hline
         Częstotliwość próbkowania ($f_s$) [Hz] & 10000 \\ \hline
-        Prędkość fali ($V$) [m/s] & 343 (Dźwięk w pow.) \\ \hline
-        Zadana odległość obiektu ($d$) [m] & 17.15 \\ \hline
-        Oczekiwane opóźnienie całkowite $\Delta t$ [s] & 0.1 \\ \hline
-        Metoda obliczeniowa & Korelacja z użyciem splotu \\ \hline
+        Współczynnik szumu  & 0.8 \\ \hline
+        Metoda korelacji & Z użyciem splotu \\ \hline
     \end{tabular}
-    \caption{Parametry dla Eksperymentu 2 (Korelacja)}
-    \label{tab:parametry_korelacja}
+    \caption{Parametry eksperymentu pomiaru odległości}
+    \label{tab:parametry_pomiar_odleglosci}
 \end{table}
 
-% \begin{figure}[H]
-%     \centering
-%     \includegraphics[width=0.85\linewidth]{placeholder_korelacja.png}
-%     \caption{Wykres wyznaczonej funkcji korelacji. Wyraźne maksimum wskazuje na przesunięcie czasowe $\Delta t$.}
-%     \label{fig:wykres_korelacji}
-% \end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{wykresy/korelacja/image.png}
+    \caption{Sygnał nadany oraz odebrany (zaszumiony)}
+
+    \label{fig:wykresy_radar}
+\end{figure}
 
 \begin{table}[H]
     \centering
     \vspace{0.2cm}
     \begin{tabular}{|l|c|}
         \hline
-        \textbf{Metryka} & \textbf{Wartość} \\ \hline
-        Zadane opóźnienie [s] & 0.100 \\ \hline
-        Opóźnienie zmierzone (maksimum korelacji) [s] & 0.100 \\ \hline
-        Zadana odległość [m] & 17.15 \\ \hline
-        Obliczona odległość [m] & 17.15 \\ \hline
-        Błąd względny pomiaru [\%] & 0.0 \\ \hline
-    \end{tabular}
-    \caption{Wyniki pomiaru odległości za pomocą korelacji}
-    \label{tab:wyniki_korelacja}
-\end{table}
+        \textbf{Wynik} & \textbf{Wartość} \\ \hline
+        Zmierzone opóźnienie (maksimum korelacji) [s] & 0.4081 \\ \hline
+        Błąd opóźnienia & 0.000063 \\ \hline
 
+
+        Zmierzona odległość [m] & 69.9892 \\ \hline
+        Błąd odległości [m] & 0.0108 \\ \hline
+    \end{tabular}
+    \caption{Zestawienie wyników eksperymentu korelacyjnego}
+    \label{tab:wyniki_pomiar_odleglosci}
+\end{table}
 
 \section{Wnioski}
 
 \begin{itemize}
-    \item \textbf{Skuteczność filtru środkowoprzepustowego (F1):} Operacja pomnożenia transmitancji idealnego filtru dolnoprzepustowego przez sygnał harmoniczny poprawnie przesunęła charakterystykę częstotliwościową, odcinając zadaną składową zakłócającą $50$ Hz oraz wysokoczęstotliwościowy szum tła.
-    \item \textbf{Wpływ okna Hanninga (O2):} Zastosowanie okna Hanninga widocznie wygładziło odpowiedź impulsową. Zgodnie z założeniami teoretycznymi, nieliniowości w paśmie przewodzenia zostały mocno zredukowane, a tłumienie w paśmie zaporowym znacząco się poprawiło kosztem nieznacznego poszerzenia pasma przejściowego.
-    \item \textbf{Dokładność metody korelacyjnej:} Zastosowanie splotu do implementacji korelacji wzajemnej sygnałów dyskretnych okazało się wysoce precyzyjną metodą pomiarową. Maksimum funkcji korelacji idealnie nałożyło się na zadane opóźnienie $\Delta t$, co pozwoliło wyznaczyć drogę obiektu z marginalnym błędem algorytmicznym (ograniczonym jedynie precyzją wynikającą z rozdzielczości siatki próbkowania $f_s$). Metoda ta jest bardzo odporna na zaszumienie sygnału.
+    \item \textbf{Wpływ rzędu filtru ($M$) na jakość filtracji:} Eksperyment 1 udowodnił, że skuteczność filtru FIR jest silnie uzależniona od liczby jego współczynników. Dla rzędu $M=11$ filtr charakteryzował się zbyt szerokim pasmem przejściowym, co utrudniało wycięcie zakłócenia o częstotliwości 2 Hz. Zwiększenie rzędu do $M=63$, a ostatecznie do $M=111$,  wyostrzyło charakterystykę częstotliwościową, umożliwiając wyizolowanie pożądanego sygnału 10 Hz spośród szumu i innych składowych.
+    \item \textbf{Wysoka odporność korelacji na szum:} Zgodnie z założeniami teoretycznymi, eksperyment 2 potwierdził, że korelacja wzajemna zrealizowana przy pomocy splotu dyskretnego jest dobrym narzędziem do detekcji sygnałów. Mimo dodania do sygnału echa szumu o bardzo dużej amplitudzie (współczynnik 0.8), operacja korelacji skutecznie zredukowała wpływ zakłóceń i uwypukliła pik w miejscu maksymalnego podobieństwa przebiegów, co pozwoliło na zmierzenie opóźnienia.
+    \item \textbf{Źródło błędu w pomiarze korelacyjnym:} Otrzymany w symulacji radaru błąd pomiaru odległości wynoszący zaledwie $0.0108$ m (około 1 cm) jest następstwem próbkowania ciągłego sygnału. Przy częstotliwości próbkowania $f_s = 10000$ Hz, odstęp między próbkami wynosi $0.0001$ s. Przy prędkości fali $V = 343$ m/s narzuca to fizyczną rozdzielczość pomiarową.
 \end{itemize}
 
 \begin{thebibliography}{1}
