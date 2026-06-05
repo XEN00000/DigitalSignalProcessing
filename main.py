@@ -242,23 +242,55 @@ class SignalApp(QMainWindow):
         self.entry_fir_taps = QLineEdit("51")
         layout_task3.addWidget(self.entry_fir_taps)
 
-        layout_task3.addWidget(QLabel("Częstotliwość odcięcia LP [Hz]:"))
+        self.lbl_fir_cutoff = QLabel("Częstotliwość odcięcia LP [Hz]:")
+        layout_task3.addWidget(self.lbl_fir_cutoff)
         self.entry_fir_cutoff = QLineEdit("15.0")
         layout_task3.addWidget(self.entry_fir_cutoff)
 
-        layout_task3.addWidget(QLabel("Pasmo F1: dolna częstotliwość [Hz]:"))
+        self.lbl_fir_low = QLabel("Pasmo F1: dolna częstotliwość [Hz]:")
+        layout_task3.addWidget(self.lbl_fir_low)
         self.entry_fir_low = QLineEdit("8.0")
         layout_task3.addWidget(self.entry_fir_low)
 
-        layout_task3.addWidget(QLabel("Pasmo F1: górna częstotliwość [Hz]:"))
+        self.lbl_fir_high = QLabel("Pasmo F1: górna częstotliwość [Hz]:")
+        layout_task3.addWidget(self.lbl_fir_high)
         self.entry_fir_high = QLineEdit("18.0")
         layout_task3.addWidget(self.entry_fir_high)
+
+        # Reagowanie na zmianę wybranego filtru
+        self.cb_fir_type.currentIndexChanged.connect(self.toggle_fir_inputs)
 
         btn_apply_filter = QPushButton("Zastosuj filtr FIR")
         btn_apply_filter.clicked.connect(self.apply_fir_filter)
         layout_task3.addWidget(btn_apply_filter)
 
         self.middle_layout.addWidget(gb_task3)
+
+        self.toggle_fir_inputs()
+
+    def toggle_fir_inputs(self):
+        """Pokazuje/ukrywa parametry filtru w zależności od jego typu."""
+        filter_type = self.cb_fir_type.currentText()
+
+        if filter_type == "Dolnoprzepustowy":
+            # Pokaż parametry dolnoprzepustowego
+            self.lbl_fir_cutoff.show()
+            self.entry_fir_cutoff.show()
+            # Ukryj parametry pasmowoprzepustowego
+            self.lbl_fir_low.hide()
+            self.entry_fir_low.hide()
+            self.lbl_fir_high.hide()
+            self.entry_fir_high.hide()
+
+        elif filter_type == "Pasmowoprzepustowy (F1)":
+            # Ukryj parametry dolnoprzepustowego
+            self.lbl_fir_cutoff.hide()
+            self.entry_fir_cutoff.hide()
+            # Pokaż parametry pasmowoprzepustowego
+            self.lbl_fir_low.show()
+            self.entry_fir_low.show()
+            self.lbl_fir_high.show()
+            self.entry_fir_high.show()
 
     def update_param_fields(self):
         """Dynamicznie buduje pola wprowadzania danych w zależności od wybranego sygnału."""
