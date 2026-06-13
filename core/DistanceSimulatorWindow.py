@@ -17,6 +17,7 @@ from PySide6.QtGui import QFont
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.gridspec import GridSpec
 
 from core.DistanceSimulator import DistanceSimulator, SimulationResult
@@ -96,7 +97,22 @@ class DistanceSimulatorWindow(QWidget):
         self._canvas = FigureCanvas(self._figure)
         self._canvas.setSizePolicy(
             QSizePolicy.Expanding, QSizePolicy.Expanding)
-        main_layout.addWidget(self._canvas, stretch=1)
+
+        # 1. Tworzymy pasek narzędzi Matplotlib
+        self._toolbar = NavigationToolbar(self._canvas, self)
+
+        # 2. Tworzymy kontener na prawy panel, aby ułożyć pasek nad wykresem
+        right_container = QWidget()
+        right_layout = QVBoxLayout(right_container)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(0)
+        
+        # 3. Dodajemy pasek i płótno do prawego kontenera
+        right_layout.addWidget(self._toolbar)
+        right_layout.addWidget(self._canvas, stretch=1)
+
+        # 4. Dodajemy cały prawy kontener do głównego układu okna
+        main_layout.addWidget(right_container, stretch=1)
 
         self._init_plots()
 
