@@ -145,10 +145,10 @@ class DistanceSimulatorWindow(QWidget):
 
         self._cb_probe_type = QComboBox()
         self._cb_probe_type.addItems([
-            "chirp (liniowo-częstotliwościowy)",
-            "sinusoid (jednoczęstotliwościowy)",
-            "gaussian_pulse (impuls Gaussa)",
-            "rectangular (prostokątny)",
+            # "chirp (liniowo-częstotliwościowy)",
+            "sinusoid",
+            # "gaussian_pulse (impuls Gaussa)",
+            # "rectangular (prostokątny)",
         ])
         form.addRow("Typ:", self._cb_probe_type)
         self._cb_probe_type.currentIndexChanged.connect(
@@ -158,7 +158,7 @@ class DistanceSimulatorWindow(QWidget):
         form.addRow("Czas trwania [s]:", le_dur)
         self._e["probe_duration"] = le_dur
 
-        self._lbl_freq = QLabel("Częstotliwość startowa [Hz]:")
+        self._lbl_freq = QLabel("Częstotliwość [Hz]:")
         self._le_freq = QLineEdit(self._DEFAULTS["probe_freq"])
         form.addRow(self._lbl_freq, self._le_freq)
         self._e["probe_freq"] = self._le_freq
