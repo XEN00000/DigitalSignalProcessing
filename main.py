@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
 from PySide6.QtCore import Qt
 
 from core.DistanceSimulatorWindow import DistanceSimulatorWindow
+from core.TransformWindow import TransformWindow
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
@@ -50,6 +51,10 @@ class SignalApp(QMainWindow):
         # Zakładka 2 – Symulator odległości (korelacja)
         dist_sim = DistanceSimulatorWindow()
         self._tabs.addTab(dist_sim, "Wyznaczanie Opóźnienia (Korelacja)")
+
+        # Zakładka 3 – Transformacje sygnałów (Zadanie 4)
+        self._transform_tab = TransformWindow()
+        self._tabs.addTab(self._transform_tab, "Transformacje (Zadanie 4)")
 
         self.create_widgets()
 
@@ -160,6 +165,14 @@ class SignalApp(QMainWindow):
         layout_files.addWidget(btn_show_text)
 
         self.left_layout.addWidget(gb_files)
+
+        # Wyślij bieżący sygnał do zakładki Transformacje
+        gb_transform_send = QGroupBox("Transformacje (Zadanie 4)")
+        vb_ts = QVBoxLayout(gb_transform_send)
+        btn_send_to_transform = QPushButton("Wyślij bieżący sygnał do Transformacji →")
+        btn_send_to_transform.clicked.connect(self._send_to_transform_tab)
+        vb_ts.addWidget(btn_send_to_transform)
+        self.left_layout.addWidget(gb_transform_send)
 
         gb_operations = QGroupBox("Operacje na sygnałach")
         layout_operations = QVBoxLayout(gb_operations)
@@ -868,6 +881,25 @@ class SignalApp(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Błąd przetwarzania",
                                  f"Wystąpił błąd:\n{e}")
+
+
+    def _send_to_transform_tab(self):
+        """Wysyła bieżący sygnał do zakładki Transformacje (Zadanie 4)."""
+        if not hasattr(self, 'current_signal') or self.current_signal is None:
+            QMessageBox.warning(
+                self, "Brak sygnału",
+                "Brak wygenerowanego sygnału. Wygeneruj lub wczytaj sygnał.")
+            return
+
+        label = getattr(self.current_signal, 'name', 'Bieżący sygnał')
+        self._transform_tab.load_external_signal(
+            time_axis=self.current_signal.time_axis,
+            amplitudes=self.current_signal.amplitudes,
+            f_pr=self.current_signal.f,
+            label=label
+        )
+        # Przełącz na zakładkę Transformacje
+        self._tabs.setCurrentWidget(self._transform_tab)
 
 
 if __name__ == "__main__":
