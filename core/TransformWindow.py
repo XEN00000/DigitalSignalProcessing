@@ -160,9 +160,17 @@ class TransformWindow(QWidget):
             self._log("❌ Niepoprawna wartość N lub f_pr.")
             return
 
-        if N <= 0 or (N & (N - 1)):
-            self._log(f"❌ N={N} nie jest potęgą 2. Wymagana potęga 2 (np. 8, 16, 32, 64).")
+        if N <= 0:
+            self._log(f"❌ N musi być liczbą całkowitą dodatnią.")
             return
+
+        is_pow2 = (N & (N - 1)) == 0
+        if not is_pow2:
+            self._log(
+                f"⚠️  N={N} nie jest potęgą 2.\n"
+                f"   DFT i WHT macierzowe zadziałają dla dowolnego N.\n"
+                f"   FFT i Fast WHT wymagają potęgi 2 – zmień N lub wybierz DFT/WHT."
+            )
 
         choice = self.cb_signal.currentText()
         if "S2" in choice:
@@ -196,12 +204,23 @@ class TransformWindow(QWidget):
                 X = dft(x)
                 self._transform_name = "DFT"
             elif name.startswith("FFT"):
+                N = len(x)
+                if N & (N - 1):
+                    self._log(f"❌ FFT wymaga N będącego potęgą 2, obecne N={N}.\n"
+                              f"   Zmień N na potęgę 2 (np. 8, 16, 32) i wczytaj sygnał ponownie,\n"
+                              f"   lub wybierz DFT (działa dla dowolnego N).")
+                    return
                 X = fft(x)
                 self._transform_name = "FFT"
             elif "Fast WHT" in name:
+                N = len(x)
+                if N & (N - 1):
+                    self._log(f"❌ Fast WHT wymaga N będącego potęgą 2, obecne N={N}.\n"
+                              f"   Zmień N na potęgę 2 lub wybierz WHT macierzowe.")
+                    return
                 X = fast_wht(x)
                 self._transform_name = "Fast WHT"
-            else:  # WHT
+            else:  # WHT macierzowe
                 X = wht(x)
                 self._transform_name = "WHT"
         except Exception as e:
@@ -215,20 +234,31 @@ class TransformWindow(QWidget):
         amp   = np.abs(X)
         phase = np.angle(X)
 
-        # Oś częstotliwości (dla Fouriera)
         N     = len(x)
         f_pr  = self._f_pr
-        freqs = np.arange(N) * f_pr / N   # f_0 = f_pr/N  (wzór F-3)
+        is_wht = self._transform_name in ("WHT", "Fast WHT")
 
-        self._log(
-            f"✅ {self._transform_name}  (N={N}, f_pr={f_pr} Hz)\n"
-            f"   Czas obliczeń: {elapsed:.3f} ms\n"
-            f"   Amplitudy |X(m)|: {np.round(amp, 4)}\n"
-            f"   Max amplituda przy indeksie m={np.argmax(amp)}  "
-            f"(f≈{freqs[np.argmax(amp)]:.2f} Hz)"
-        )
+        if is_wht:
+            # WHT: oś to indeks współczynnika (sequency)
+            x_axis = np.arange(N)
+            self._log(
+                f"✅ {self._transform_name}  (N={N}, f_pr={f_pr} Hz)\n"
+                f"   Czas obliczeń: {elapsed:.3f} ms\n"
+                f"   Współczynniki Walsha |X(m)|: {np.round(amp, 4)}\n"
+                f"   Max amplituda przy indeksie m={np.argmax(amp)}"
+            )
+        else:
+            # DFT/FFT: oś częstotliwości w Hz (wzór F-3)
+            x_axis = np.arange(N) * f_pr / N
+            self._log(
+                f"✅ {self._transform_name}  (N={N}, f_pr={f_pr} Hz)\n"
+                f"   Czas obliczeń: {elapsed:.3f} ms\n"
+                f"   Amplitudy |X(m)|: {np.round(amp, 4)}\n"
+                f"   Max amplituda przy indeksie m={np.argmax(amp)}  "
+                f"(f≈{x_axis[np.argmax(amp)]:.2f} Hz)"
+            )
 
-        self._plot_full(self._current_time, x, freqs, amp, phase, None)
+        self._plot_full(self._current_time, x, x_axis, amp, phase, None)
 
     # -----------------------------------------------------------------------
     # Obliczenie transformaty odwrotnej
@@ -267,11 +297,16 @@ class TransformWindow(QWidget):
         )
 
         # Zaktualizuj wykres z sygnałem odtworzonym
-        freqs = self._freqs_for_plot()
+        is_wht = self._transform_name in ("WHT", "Fast WHT")
+        N = len(X)
+        if is_wht:
+            x_axis = np.arange(N)
+        else:
+            x_axis = self._freqs_for_plot()
         amp   = np.abs(X)
         phase = np.angle(X)
         self._plot_full(self._current_time, self._current_signal,
-                        freqs, amp, phase, x_rec)
+                        x_axis, amp, phase, x_rec)
 
     # -----------------------------------------------------------------------
     # Rysowanie
@@ -307,8 +342,10 @@ class TransformWindow(QWidget):
         self.figure.tight_layout(pad=2.5)
         self.canvas.draw()
 
-    def _plot_full(self, t, x, freqs, amp, phase, x_rec):
-        """Pełny wykres: sygnał + widmo amp + widmo fazy + rekonstrukcja."""
+    def _plot_full(self, t, x, x_axis, amp, phase, x_rec):
+        """Pełny wykres: sygnał + widmo amp + widmo fazy (lub wartości) + rekonstrukcja."""
+        is_wht = self._transform_name in ("WHT", "Fast WHT")
+
         self.figure.clear()
         self.ax_sig   = self.figure.add_subplot(411)
         self.ax_amp   = self.figure.add_subplot(412)
@@ -322,21 +359,50 @@ class TransformWindow(QWidget):
         self.ax_sig.set_ylabel("Amplituda")
         self.ax_sig.grid(True, alpha=0.4)
 
-        # 2. Widmo amplitudy
-        markerline, stemlines, baseline = self.ax_amp.stem(
-            freqs, amp, linefmt='C1-', markerfmt='C1o', basefmt='gray')
-        self.ax_amp.set_title(f"Widmo amplitudy |X(m)|  ({self._transform_name})", fontsize=10)
-        self.ax_amp.set_xlabel("Częstotliwość [Hz]")
-        self.ax_amp.set_ylabel("|X(m)|")
-        self.ax_amp.grid(True, alpha=0.4)
+        if is_wht:
+            # --- WHT: widmo amplitudy z osią sequency ---
+            self.ax_amp.stem(
+                x_axis, amp, linefmt='C1-', markerfmt='C1o', basefmt='gray')
+            self.ax_amp.set_title(
+                f"Widmo amplitudy Walsha |X(m)|  ({self._transform_name})", fontsize=10)
+            self.ax_amp.set_xlabel("Indeks współczynnika (sequency)")
+            self.ax_amp.set_ylabel("|X(m)|")
+            self.ax_amp.grid(True, alpha=0.4)
 
-        # 3. Widmo fazy
-        self.ax_phase.stem(
-            freqs, phase, linefmt='C2-', markerfmt='C2o', basefmt='gray')
-        self.ax_phase.set_title(f"Widmo fazy ∠X(m)  ({self._transform_name})", fontsize=10)
-        self.ax_phase.set_xlabel("Częstotliwość [Hz]")
-        self.ax_phase.set_ylabel("Faza [rad]")
-        self.ax_phase.grid(True, alpha=0.4)
+            # --- WHT: zamiast fazy – wartości współczynników (ze znakiem) ---
+            spectrum_real = self._current_spectrum
+            if spectrum_real is not None:
+                colors = ['C2' if v >= 0 else 'C3' for v in spectrum_real]
+                markerline, stemlines, baseline = self.ax_phase.stem(
+                    x_axis, spectrum_real, linefmt='C2-', markerfmt='C2o', basefmt='gray')
+                self.ax_phase.set_title(
+                    f"Współczynniki Walsha X(m)  ({self._transform_name})", fontsize=10)
+                self.ax_phase.set_xlabel("Indeks współczynnika (sequency)")
+                self.ax_phase.set_ylabel("X(m)")
+                self.ax_phase.axhline(y=0, color='gray', linewidth=0.8)
+                self.ax_phase.grid(True, alpha=0.4)
+            else:
+                self.ax_phase.text(0.5, 0.5, "Brak danych",
+                                   ha='center', va='center',
+                                   transform=self.ax_phase.transAxes,
+                                   color='gray', fontsize=9)
+        else:
+            # --- Fourier: klasyczne widmo amplitudy i fazy ---
+            self.ax_amp.stem(
+                x_axis, amp, linefmt='C1-', markerfmt='C1o', basefmt='gray')
+            self.ax_amp.set_title(
+                f"Widmo amplitudy |X(m)|  ({self._transform_name})", fontsize=10)
+            self.ax_amp.set_xlabel("Częstotliwość [Hz]")
+            self.ax_amp.set_ylabel("|X(m)|")
+            self.ax_amp.grid(True, alpha=0.4)
+
+            self.ax_phase.stem(
+                x_axis, phase, linefmt='C2-', markerfmt='C2o', basefmt='gray')
+            self.ax_phase.set_title(
+                f"Widmo fazy ∠X(m)  ({self._transform_name})", fontsize=10)
+            self.ax_phase.set_xlabel("Częstotliwość [Hz]")
+            self.ax_phase.set_ylabel("Faza [rad]")
+            self.ax_phase.grid(True, alpha=0.4)
 
         # 4. Sygnał odtworzony (lub info)
         if x_rec is not None:
