@@ -108,6 +108,19 @@ class TransformWindow(QWidget):
 
         left_layout.addWidget(gb_tr)
 
+        # --- Tryb wyświetlania widma (W1 / W2) ---
+        gb_display = QGroupBox("Tryb wyświetlania widma")
+        vb_display = QVBoxLayout(gb_display)
+        vb_display.addWidget(QLabel("Wybierz tryb:"))
+        self.cb_display_mode = QComboBox()
+        self.cb_display_mode.addItems([
+            "W2 – Moduł |X| i Argument ∠X",
+            "W1 – Część rzeczywista Re(X) i urojona Im(X)",
+        ])
+        self.cb_display_mode.currentIndexChanged.connect(self._on_display_mode_changed)
+        vb_display.addWidget(self.cb_display_mode)
+        left_layout.addWidget(gb_display)
+
         # --- Wyniki / log ---
         gb_log = QGroupBox("Wyniki")
         vb_log = QVBoxLayout(gb_log)
@@ -342,14 +355,32 @@ class TransformWindow(QWidget):
         self.figure.tight_layout(pad=2.5)
         self.canvas.draw()
 
-    def _plot_full(self, t, x, x_axis, amp, phase, x_rec):
-        """Pełny wykres: sygnał + widmo amp + widmo fazy (lub wartości) + rekonstrukcja."""
+    def _on_display_mode_changed(self):
+        """Przerysuj wykresy po zmianie trybu W1/W2."""
+        if self._current_spectrum is None:
+            return
+        X = self._current_spectrum
         is_wht = self._transform_name in ("WHT", "Fast WHT")
+        N = len(X)
+        if is_wht:
+            x_axis = np.arange(N)
+        else:
+            x_axis = np.arange(N) * self._f_pr / N
+        amp   = np.abs(X)
+        phase = np.angle(X)
+        self._plot_full(self._current_time, self._current_signal,
+                        x_axis, amp, phase, None)
+
+    def _plot_full(self, t, x, x_axis, amp, phase, x_rec):
+        """Pełny wykres: sygnał + widmo (W1 lub W2) + rekonstrukcja."""
+        is_wht = self._transform_name in ("WHT", "Fast WHT")
+        # 0 = W2 (moduł + argument), 1 = W1 (Re + Im)
+        display_mode = self.cb_display_mode.currentIndex()
 
         self.figure.clear()
         self.ax_sig   = self.figure.add_subplot(411)
-        self.ax_amp   = self.figure.add_subplot(412)
-        self.ax_phase = self.figure.add_subplot(413)
+        self.ax_top   = self.figure.add_subplot(412)
+        self.ax_bot   = self.figure.add_subplot(413)
         self.ax_rec   = self.figure.add_subplot(414)
 
         # 1. Sygnał wejściowy
@@ -359,50 +390,73 @@ class TransformWindow(QWidget):
         self.ax_sig.set_ylabel("Amplituda")
         self.ax_sig.grid(True, alpha=0.4)
 
+        # 2–3. Widmo – zależy od trybu W1/W2 i rodzaju transformacji
         if is_wht:
             # --- WHT: widmo amplitudy z osią sequency ---
-            self.ax_amp.stem(
+            self.ax_top.stem(
                 x_axis, amp, linefmt='C1-', markerfmt='C1o', basefmt='gray')
-            self.ax_amp.set_title(
+            self.ax_top.set_title(
                 f"Widmo amplitudy Walsha |X(m)|  ({self._transform_name})", fontsize=10)
-            self.ax_amp.set_xlabel("Indeks współczynnika (sequency)")
-            self.ax_amp.set_ylabel("|X(m)|")
-            self.ax_amp.grid(True, alpha=0.4)
+            self.ax_top.set_xlabel("Indeks współczynnika (sequency)")
+            self.ax_top.set_ylabel("|X(m)|")
+            self.ax_top.grid(True, alpha=0.4)
 
             # --- WHT: zamiast fazy – wartości współczynników (ze znakiem) ---
             spectrum_real = self._current_spectrum
             if spectrum_real is not None:
-                colors = ['C2' if v >= 0 else 'C3' for v in spectrum_real]
-                markerline, stemlines, baseline = self.ax_phase.stem(
+                self.ax_bot.stem(
                     x_axis, spectrum_real, linefmt='C2-', markerfmt='C2o', basefmt='gray')
-                self.ax_phase.set_title(
+                self.ax_bot.set_title(
                     f"Współczynniki Walsha X(m)  ({self._transform_name})", fontsize=10)
-                self.ax_phase.set_xlabel("Indeks współczynnika (sequency)")
-                self.ax_phase.set_ylabel("X(m)")
-                self.ax_phase.axhline(y=0, color='gray', linewidth=0.8)
-                self.ax_phase.grid(True, alpha=0.4)
+                self.ax_bot.set_xlabel("Indeks współczynnika (sequency)")
+                self.ax_bot.set_ylabel("X(m)")
+                self.ax_bot.axhline(y=0, color='gray', linewidth=0.8)
+                self.ax_bot.grid(True, alpha=0.4)
             else:
-                self.ax_phase.text(0.5, 0.5, "Brak danych",
-                                   ha='center', va='center',
-                                   transform=self.ax_phase.transAxes,
-                                   color='gray', fontsize=9)
+                self.ax_bot.text(0.5, 0.5, "Brak danych",
+                                 ha='center', va='center',
+                                 transform=self.ax_bot.transAxes,
+                                 color='gray', fontsize=9)
         else:
-            # --- Fourier: klasyczne widmo amplitudy i fazy ---
-            self.ax_amp.stem(
-                x_axis, amp, linefmt='C1-', markerfmt='C1o', basefmt='gray')
-            self.ax_amp.set_title(
-                f"Widmo amplitudy |X(m)|  ({self._transform_name})", fontsize=10)
-            self.ax_amp.set_xlabel("Częstotliwość [Hz]")
-            self.ax_amp.set_ylabel("|X(m)|")
-            self.ax_amp.grid(True, alpha=0.4)
+            # --- Fourier: tryb W1 lub W2 ---
+            X = self._current_spectrum
+            if display_mode == 1:
+                # W1: Re(X) i Im(X)
+                re_part = np.real(X)
+                im_part = np.imag(X)
 
-            self.ax_phase.stem(
-                x_axis, phase, linefmt='C2-', markerfmt='C2o', basefmt='gray')
-            self.ax_phase.set_title(
-                f"Widmo fazy ∠X(m)  ({self._transform_name})", fontsize=10)
-            self.ax_phase.set_xlabel("Częstotliwość [Hz]")
-            self.ax_phase.set_ylabel("Faza [rad]")
-            self.ax_phase.grid(True, alpha=0.4)
+                self.ax_top.stem(
+                    x_axis, re_part, linefmt='C1-', markerfmt='C1o', basefmt='gray')
+                self.ax_top.set_title(
+                    f"Część rzeczywista Re(X(m))  ({self._transform_name})  [W1]", fontsize=10)
+                self.ax_top.set_xlabel("Częstotliwość [Hz]")
+                self.ax_top.set_ylabel("Re(X(m))")
+                self.ax_top.grid(True, alpha=0.4)
+
+                self.ax_bot.stem(
+                    x_axis, im_part, linefmt='C2-', markerfmt='C2o', basefmt='gray')
+                self.ax_bot.set_title(
+                    f"Część urojona Im(X(m))  ({self._transform_name})  [W1]", fontsize=10)
+                self.ax_bot.set_xlabel("Częstotliwość [Hz]")
+                self.ax_bot.set_ylabel("Im(X(m))")
+                self.ax_bot.grid(True, alpha=0.4)
+            else:
+                # W2: |X| i ∠X
+                self.ax_top.stem(
+                    x_axis, amp, linefmt='C1-', markerfmt='C1o', basefmt='gray')
+                self.ax_top.set_title(
+                    f"Moduł |X(m)|  ({self._transform_name})  [W2]", fontsize=10)
+                self.ax_top.set_xlabel("Częstotliwość [Hz]")
+                self.ax_top.set_ylabel("|X(m)|")
+                self.ax_top.grid(True, alpha=0.4)
+
+                self.ax_bot.stem(
+                    x_axis, phase, linefmt='C2-', markerfmt='C2o', basefmt='gray')
+                self.ax_bot.set_title(
+                    f"Argument ∠X(m)  ({self._transform_name})  [W2]", fontsize=10)
+                self.ax_bot.set_xlabel("Częstotliwość [Hz]")
+                self.ax_bot.set_ylabel("Faza [rad]")
+                self.ax_bot.grid(True, alpha=0.4)
 
         # 4. Sygnał odtworzony (lub info)
         if x_rec is not None:
